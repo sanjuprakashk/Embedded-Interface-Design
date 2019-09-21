@@ -5,6 +5,7 @@ from eid_project1_ui import Ui_Dialog
 import sys
 import Adafruit_DHT
 import mysql.connector
+import pyqtgraph as pg
 
 class eid_project1(QtWidgets.QDialog):
 	def __init__(self):
@@ -41,6 +42,10 @@ class eid_project1(QtWidgets.QDialog):
 		
 		self.ui.immediateValButton.clicked.connect(self.getImmediateVal)
 		
+		self.ui.getTempPlotButton.clicked.connect(self.get_temperature)
+		
+		self.ui.getHumPlotButton.clicked.connect(self.get_humidity)
+		
 		self.create_table()
 		
 		
@@ -49,7 +54,8 @@ class eid_project1(QtWidgets.QDialog):
 		self.periodicTimer = QtCore.QTimer(self)
 		self.periodicTimer.timeout.connect(self.sensorUpdate)
 		self.periodicTimer.start(1000)
-		
+
+# Function the change units from F to C and vice-versa
 	def changeUnits(self):
 		if(self.Units == 'C'):
 			self.Units = 'F'
@@ -58,14 +64,17 @@ class eid_project1(QtWidgets.QDialog):
 		
 		self.updateDisplay()
 	
+#Function to set temperature limit
 	def setTempLimit(self):
 		self.tempLimit = float(self.ui.tempLimitLine.text())
 		self.updateDisplay()
 		
+#Function to set humidity limit
 	def setHumLimit(self):
 		self.humLimit = float(self.ui.humLimitLine.text())
 		self.updateDisplay()
-	
+
+#Function to update display
 	def updateDisplay(self):
 		humLimit = float("{0:.2f}".format(self.humLimit))
 		humVal  = float("{0:.2f}".format(self.humVal))
@@ -97,11 +106,13 @@ class eid_project1(QtWidgets.QDialog):
 		
 		self.ui.tempDisplayLine.setText(str(tempVal) + " " + self.Units)
 		self.ui.humDisplayLine.setText(str(humVal) + " %")
-		
+
+#Function to set ERROR	
 	def updateError(self):
 		self.ui.tempDisplayLine.setText("Error")
 		self.ui.humDisplayLine.setText("Error")
-	
+
+#Function to get Immediate value from sensor	
 	def getImmediateVal(self):
 		self.humVal , self.tempVal = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, 4, delay_seconds=0.2)
 		
@@ -111,7 +122,8 @@ class eid_project1(QtWidgets.QDialog):
 			self.updateDisplay()
 		else:
 			self.updateError()
-	
+
+#Function to update the sensor for every 15 seconds	
 	def sensorUpdate(self):
 		''' https://github.com/adafruit/Adafruit_Python_DHT/blob/master/examples/AdafruitDHT.py '''
 		self.humVal , self.tempVal = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, 4, delay_seconds=0.2)
@@ -130,6 +142,7 @@ class eid_project1(QtWidgets.QDialog):
 			self.mariadb_connection.close()
 			sys.exit(1)
 	
+#Function to create SQL table in DB if it not exist
 	def create_table(self):
 		humd_table_exist = "SHOW TABLES LIKE 'HUMID1'"
 		self.cursor.execute(humd_table_exist)
@@ -149,31 +162,55 @@ class eid_project1(QtWidgets.QDialog):
 			# there are no tables named "TEMP1"
 			self.cursor.execute("CREATE TABLE TEMP1(id INT NOT NULL AUTO_INCREMENT, Temp VARCHAR(20) NOT NULL, time_stamp VARCHAR(20) NOT NULL, PRIMARY KEY (id));")
 		
-		
+#Function to put humidity entries into DB	
 	def put_humidity(self,humdVal,humdTime):
 		self.cursor.execute("INSERT INTO HUMID1 (Humd, time_stamp) VALUES (%s, %s)", (humdVal, humdTime))
 		print("Record inserted successfully into HUMID1 table")
 		self.mariadb_connection.commit()
-		
+
+#Function to put temperature entries into DB	
 	def put_temperature(self, tempVal,tempTime):
 		self.cursor.execute("INSERT INTO TEMP1 (Temp, time_stamp) VALUES (%s, %s)", (tempVal, tempTime))
 		print("Record inserted successfully into TEMP1 table")
 		self.mariadb_connection.commit()
 
+#Function to get humidity entry and plot humidity graph
 	def get_humidity(self):
+		#https://pythonprogramminglanguage.com/pyqtgraph-plot/
+		x = range(0,10)
+		plt = pg.plot()
+		plt.setWindowTitle('Humidity plot')
+		
 		
 		fetch_humid = "SELECT * FROM HUMID1 ORDER BY id DESC LIMIT 10"
 		self.cursor.execute(fetch_humid)
 		hum_values = self.cursor.fetchall()
-		print (hum_values)
-		return hum_values
+		hum_list = [x[1] for x in hum_values]
+		hum_list = list(map(float, hum_list))
+		if(self.Units == 'F'):
+			hum_list = [((i *  9/5)+32) for i in hum_list]
+		print (hum_list)
+		plt.plot(x, hum_list, pen='b', symbol='x', symbolPen='b', symbolBrush=0.2, name='red')
 		
+		return hum_list
+
+#Function to get temperature entry and plot temperature graph	
 	def get_temperature(self):
+		x = range(0,10)
+		plt = pg.plot()
+		plt.setWindowTitle('Temperature plot')
 		fetch_temp = "SELECT * FROM TEMP1 ORDER BY id DESC LIMIT 10"
 		self.cursor.execute(fetch_temp)
 		temp_values = self.cursor.fetchall()
-		print (temp_values)
-		return temp_values
+		temp_list = [x[1] for x in temp_values]
+		temp_list = list(map(float, temp_list))
+		if(self.Units == 'F'):
+			temp_list = [((i *  9/5)+32) for i in temp_list]
+		print (temp_list)
+		
+		plt.plot(x, temp_list, pen='b', symbol='x', symbolPen='b', symbolBrush=0.2, name='blue')
+		
+		return temp_list
 
 
 app = QtWidgets.QApplication([])
