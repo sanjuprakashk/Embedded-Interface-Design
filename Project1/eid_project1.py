@@ -42,20 +42,19 @@ class eid_project1(QtWidgets.QDialog):
 		
 		self.ui.immediateValButton.clicked.connect(self.getImmediateVal)
 		
-		self.ui.getTempPlotButton.clicked.connect(self.get_temperature)
+		self.ui.getTempPlotButton.clicked.connect(self.getTemperatureValFromDb)
 		
-		self.ui.getHumPlotButton.clicked.connect(self.get_humidity)
+		self.ui.getHumPlotButton.clicked.connect(self.getHumidityValFromDb)
 		
-		self.create_table()
+		self.createTableInDb()
 		
-		
-		
+			
 		''' https://www.programcreek.com/python/example/99607/PyQt5.QtCore.QTimer '''
 		self.periodicTimer = QtCore.QTimer(self)
 		self.periodicTimer.timeout.connect(self.sensorUpdate)
 		self.periodicTimer.start(1000)
 
-# Function the change units from F to C and vice-versa
+# Function the change units from Faren to Celcius and vice-versa
 	def changeUnits(self):
 		if(self.Units == 'C'):
 			self.Units = 'F'
@@ -78,8 +77,7 @@ class eid_project1(QtWidgets.QDialog):
 	def updateDisplay(self):
 		humLimit = float("{0:.2f}".format(self.humLimit))
 		humVal  = float("{0:.2f}".format(self.humVal))
-			
-					
+							
 		if(self.Units == 'C'):
 			tempVal  = float("{0:.2f}".format(self.tempVal))
 			tempLimit = float("{0:.2f}".format(self.tempLimit))
@@ -135,77 +133,91 @@ class eid_project1(QtWidgets.QDialog):
 			self.updateError()
 		
 		self.timeStamp = QtCore.QTime.currentTime().toString(QtCore.Qt.DefaultLocaleLongDate)
-		self.put_humidity(self.humVal, self.timeStamp)
-		self.put_temperature(self.tempVal, self.timeStamp)
+		self.putHumidityValInDb(self.humVal, self.timeStamp)
+		self.putTemperatureValInDb(self.tempVal, self.timeStamp)
+		
 		if(self.sensorReadingCount == 30):
 			self.periodicTimer.stop()
 			self.mariadb_connection.close()
 			sys.exit(1)
 	
-#Function to create SQL table in DB if it not exist
-	def create_table(self):
-		humd_table_exist = "SHOW TABLES LIKE 'HUMID1'"
+#Function to create SQL table for Temperature and humidity in DB if it not exist
+	def createTableInDb(self):
+		humd_table_exist = "SHOW TABLES LIKE 'HUMID'"
 		self.cursor.execute(humd_table_exist)
 		result_hum = self.cursor.fetchone()
-		if result_hum:
-			print ('there is a table named HUMID1')
-		else:
-			# there are no tables named "HUMID1"
-			self.cursor.execute("CREATE TABLE HUMID1(id INT NOT NULL AUTO_INCREMENT, Humd VARCHAR(20) NOT NULL, time_stamp VARCHAR(20) NOT NULL, PRIMARY KEY (id));")
 		
-		temp_table_exist = "SHOW TABLES LIKE 'TEMP1'"
-		self.cursor.execute(temp_table_exist)
-		result_temp = self.cursor.fetchone()
-		if result_temp:
-			print ('there is a table named TEMP1')
+		if result_hum:
+			print ('there is a table named HUMID')
 		else:
-			# there are no tables named "TEMP1"
-			self.cursor.execute("CREATE TABLE TEMP1(id INT NOT NULL AUTO_INCREMENT, Temp VARCHAR(20) NOT NULL, time_stamp VARCHAR(20) NOT NULL, PRIMARY KEY (id));")
+			# there are no tables named "HUMID" thus creating a table
+			self.cursor.execute("CREATE TABLE HUMID(id INT NOT NULL AUTO_INCREMENT, Humd VARCHAR(20) NOT NULL, time_stamp VARCHAR(20) NOT NULL, PRIMARY KEY (id));")
+		
+		temp_table_exist = "SHOW TABLES LIKE 'TEMP'"
+		self.cursor.execute(temp_table_exist)
+		
+		result_temp = self.cursor.fetchone()
+		
+		if result_temp:
+			print ('there is a table named TEMP')
+		else:
+			# there are no tables named "TEMP" thus creating a atble
+			self.cursor.execute("CREATE TABLE TEMP(id INT NOT NULL AUTO_INCREMENT, Temp VARCHAR(20) NOT NULL, time_stamp VARCHAR(20) NOT NULL, PRIMARY KEY (id));")
 		
 #Function to put humidity entries into DB	
-	def put_humidity(self,humdVal,humdTime):
-		self.cursor.execute("INSERT INTO HUMID1 (Humd, time_stamp) VALUES (%s, %s)", (humdVal, humdTime))
-		print("Record inserted successfully into HUMID1 table")
+	def putHumidityValInDb(self,humdVal,humdTime):
+		self.cursor.execute("INSERT INTO HUMID (Humd, time_stamp) VALUES (%s, %s)", (humdVal, humdTime))
+		print("Record inserted successfully into HUMID table")
+		
 		self.mariadb_connection.commit()
 
 #Function to put temperature entries into DB	
-	def put_temperature(self, tempVal,tempTime):
-		self.cursor.execute("INSERT INTO TEMP1 (Temp, time_stamp) VALUES (%s, %s)", (tempVal, tempTime))
-		print("Record inserted successfully into TEMP1 table")
+	def putTemperatureValInDb(self, tempVal,tempTime):
+		
+		self.cursor.execute("INSERT INTO TEMP (Temp, time_stamp) VALUES (%s, %s)", (tempVal, tempTime))
+		print("Record inserted successfully into TEMP table")
+		
 		self.mariadb_connection.commit()
 
 #Function to get humidity entry and plot humidity graph
-	def get_humidity(self):
+	def getHumidityValFromDb(self):
 		#https://pythonprogramminglanguage.com/pyqtgraph-plot/
 		x = range(0,10)
 		plt = pg.plot()
 		plt.setWindowTitle('Humidity plot')
-		
-		
-		fetch_humid = "SELECT * FROM HUMID1 ORDER BY id DESC LIMIT 10"
+				
+		fetch_humid = "SELECT * FROM HUMID ORDER BY id DESC LIMIT 10"
 		self.cursor.execute(fetch_humid)
+		
 		hum_values = self.cursor.fetchall()
 		hum_list = [x[1] for x in hum_values]
 		hum_list = list(map(float, hum_list))
+		
 		if(self.Units == 'F'):
 			hum_list = [((i *  9/5)+32) for i in hum_list]
+			
 		print (hum_list)
+		
 		plt.plot(x, hum_list, pen='b', symbol='x', symbolPen='b', symbolBrush=0.2, name='red')
 		
 		return hum_list
 
 #Function to get temperature entry and plot temperature graph	
-	def get_temperature(self):
+	def getTemperatureValFromDb(self):
 		x = range(0,10)
 		plt = pg.plot()
 		plt.setWindowTitle('Temperature plot')
-		fetch_temp = "SELECT * FROM TEMP1 ORDER BY id DESC LIMIT 10"
+		
+		fetch_temp = "SELECT * FROM TEMP ORDER BY id DESC LIMIT 10"
 		self.cursor.execute(fetch_temp)
+		
 		temp_values = self.cursor.fetchall()
 		temp_list = [x[1] for x in temp_values]
 		temp_list = list(map(float, temp_list))
+		
 		if(self.Units == 'F'):
 			temp_list = [((i *  9/5)+32) for i in temp_list]
+			
 		print (temp_list)
 		
 		plt.plot(x, temp_list, pen='b', symbol='x', symbolPen='b', symbolBrush=0.2, name='blue')
