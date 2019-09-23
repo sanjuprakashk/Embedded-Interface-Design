@@ -212,7 +212,7 @@ class eid_project1(QtWidgets.QDialog):
 		if result_temp:
 			print ('there is a table named TEMP')
 		else:
-			# there are no tables named "TEMP" thus creating a atble
+			# there are no tables named "TEMP" thus creating a table
 			self.cursor.execute("CREATE TABLE TEMP(id INT NOT NULL AUTO_INCREMENT, \
 				                                   Temp VARCHAR(20) NOT NULL, \
 				                                   time_stamp VARCHAR(20) NOT NULL, \
@@ -228,13 +228,11 @@ class eid_project1(QtWidgets.QDialog):
 				
 		self.mariadb_connection.commit()
 
-	
-	#Function to put temperature entries into DB	
+		
 	def putTemperatureValInDb(self, tempVal, tempTime):
 		'''
 		Function to put temperature entries into DB
-		'''
-		
+		'''	
 		self.cursor.execute("INSERT INTO TEMP (Temp, time_stamp) \
 			                 VALUES (%s, %s)", (tempVal, tempTime))
 		self.mariadb_connection.commit()
@@ -242,7 +240,7 @@ class eid_project1(QtWidgets.QDialog):
 	
 	def getHumidityValFromDb(self):
 		'''
-		Function to get humidity entry and plot humidity graph
+		Function to get humidity entry DB and plot humidity graph
 		'''
 		self.hum_plt = pg.plot(title="Humidity Plot")
 		self.hum_plt.showGrid(x=True,y=True)
@@ -272,7 +270,7 @@ class eid_project1(QtWidgets.QDialog):
 	
 	def getTemperatureValFromDb(self):
 		'''
-		Function to get temperature entry and plot temperature graph
+		Function to get temperature entry from DB and plot temperature graph
 		'''
 		self.temp_plt = pg.plot(title="Temperature Plot")
 		self.temp_plt.showGrid(x=True,y=True)
