@@ -38,6 +38,8 @@ Connect DHT22 sensor voltage pin to pin 1 on the RPI
 Connect DHT22 sensor gnd pin to pin 6 on the RPI  
 Connect DHT22 sensor data pin to pin 7 on the RPI  
 
+## Instruction to run program
+From this directory do - python3 Project1/eid_project1.py  
 
 ## Project Work
 
@@ -67,6 +69,8 @@ https://github.com/adafruit/Adafruit_Python_DHT/blob/master/examples/AdafruitDHT
 https://pythonprogramminglanguage.com/pyqtgraph-plot/  
 https://stackoverflow.com/  
 https://askubuntu.com/questions/1014947/mysql-connector-python-importerror-no-module-named-mysql  
+https://www.programcreek.com/python/example/99607/PyQt5.QtCore.QTimer  
 https://www.youtube.com/watch?v=lCfSKtPADYw  
 https://www.mssqltips.com  
 https://www.w3schools.com
+
