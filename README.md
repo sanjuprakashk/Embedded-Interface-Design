@@ -62,7 +62,7 @@ Integrated PyQt ui with sensor
 Clicking the change units button will change the temperature from Celcius to Farenheit 
 and vice-versa
 
-##References
+## References
 https://github.com/adafruit/Adafruit_Python_DHT/blob/master/examples/AdafruitDHT.py  
 https://pythonprogramminglanguage.com/pyqtgraph-plot/  
 https://stackoverflow.com/  

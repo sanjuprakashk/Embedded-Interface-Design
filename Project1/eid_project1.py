@@ -125,12 +125,13 @@ class eid_project1(QtWidgets.QDialog):
 		self.humVal , self.tempVal = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, 4, delay_seconds=0.2)
 		self.sensorReadingCount = self.sensorReadingCount + 1
 		
+		self.timeStamp = QtCore.QTime.currentTime().toString(QtCore.Qt.DefaultLocaleLongDate)
+		
 		if self.humVal is not None and self.tempVal  is not None:
 			self.updateDisplay()
 		else:
 			self.updateError()
 		
-		self.timeStamp = QtCore.QTime.currentTime().toString(QtCore.Qt.DefaultLocaleLongDate)
 		self.putHumidityValInDb(self.humVal, self.timeStamp)
 		self.putTemperatureValInDb(self.tempVal, self.timeStamp)
 		
@@ -189,6 +190,7 @@ class eid_project1(QtWidgets.QDialog):
 		hum_values = self.cursor.fetchall()
 		hum_list = [temp[1] for temp in hum_values]
 		hum_list = list(map(float, hum_list))
+		hum_list.reverse()
 		
 		x = range(0,len(hum_list))
 		if(self.Units == 'F'):
@@ -212,6 +214,7 @@ class eid_project1(QtWidgets.QDialog):
 		temp_values = self.cursor.fetchall()
 		temp_list = [temp[1] for temp in temp_values]
 		temp_list = list(map(float, temp_list))
+		temp_list.reverse()
 		
 		x = range(0,len(temp_list))
 		
