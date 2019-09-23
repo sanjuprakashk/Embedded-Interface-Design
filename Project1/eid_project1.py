@@ -13,7 +13,7 @@ class eid_project1(QtWidgets.QDialog):
 		self.ui = Ui_Dialog()
 		self.ui.setupUi(self)
 		
-		self.mariadb_connection = mysql.connector.connect(user='srinath', password='srinath', database='test')
+		self.mariadb_connection = mysql.connector.connect(user='sansri', password='sansri1234', database='eid_project1')
 		
 		self.cursor = self.mariadb_connection.cursor()
 		
@@ -52,7 +52,7 @@ class eid_project1(QtWidgets.QDialog):
 		''' https://www.programcreek.com/python/example/99607/PyQt5.QtCore.QTimer '''
 		self.periodicTimer = QtCore.QTimer(self)
 		self.periodicTimer.timeout.connect(self.sensorUpdate)
-		self.periodicTimer.start(1000)
+		self.periodicTimer.start(15000)
 
 # Function the change units from Faren to Celcius and vice-versa
 	def changeUnits(self):
@@ -95,12 +95,10 @@ class eid_project1(QtWidgets.QDialog):
 		else:
 			self.ui.tempExceededLine.setText("Temperature in range")
 			
-		#self.ui.tempLimitLine.setText(str(tempLimit))
-		#self.ui.humLimitLine.setText(str(humLimit)) 
-		self.ui.timestampDisplayLine.setText(str(self.timeStamp))
+		self.ui.tempLimitLine.setText(str(tempLimit))
+		self.ui.humLimitLine.setText(str(humLimit)) 
 		
-		print("Humidity limit = ", humLimit)
-		print("Temperature limit = ", tempLimit)
+		self.ui.timestampDisplayLine.setText(str(self.timeStamp))
 		
 		self.ui.tempDisplayLine.setText(str(tempVal) + " " + self.Units)
 		self.ui.humDisplayLine.setText(str(humVal) + " %")
@@ -148,7 +146,7 @@ class eid_project1(QtWidgets.QDialog):
 		result_hum = self.cursor.fetchone()
 		
 		if result_hum:
-			print ('there is a table named HUMID')
+			print ('There is a table named HUMID')
 		else:
 			# there are no tables named "HUMID" thus creating a table
 			self.cursor.execute("CREATE TABLE HUMID(id INT NOT NULL AUTO_INCREMENT, Humd VARCHAR(20) NOT NULL, time_stamp VARCHAR(20) NOT NULL, PRIMARY KEY (id));")
@@ -167,66 +165,70 @@ class eid_project1(QtWidgets.QDialog):
 #Function to put humidity entries into DB	
 	def putHumidityValInDb(self,humdVal,humdTime):
 		self.cursor.execute("INSERT INTO HUMID (Humd, time_stamp) VALUES (%s, %s)", (humdVal, humdTime))
-		print("Record inserted successfully into HUMID table")
-		
+				
 		self.mariadb_connection.commit()
 
 #Function to put temperature entries into DB	
 	def putTemperatureValInDb(self, tempVal,tempTime):
 		
 		self.cursor.execute("INSERT INTO TEMP (Temp, time_stamp) VALUES (%s, %s)", (tempVal, tempTime))
-		print("Record inserted successfully into TEMP table")
-		
 		self.mariadb_connection.commit()
 
 #Function to get humidity entry and plot humidity graph
 	def getHumidityValFromDb(self):
 		#https://pythonprogramminglanguage.com/pyqtgraph-plot/
-		x = range(0,10)
-		plt = pg.plot()
-		plt.setWindowTitle('Humidity plot')
-				
+		self.hum_plt = pg.plot(title="Humidity Plot")
+		self.hum_plt.showGrid(x=True,y=True)
+		
+		self.hum_plt.setLabel('left', 'Humidity', units='%')
+		self.hum_plt.setLabel('bottom', 'Number', units='')
+						
 		fetch_humid = "SELECT * FROM HUMID ORDER BY id DESC LIMIT 10"
 		self.cursor.execute(fetch_humid)
 		
 		hum_values = self.cursor.fetchall()
-		hum_list = [x[1] for x in hum_values]
+		hum_list = [temp[1] for temp in hum_values]
 		hum_list = list(map(float, hum_list))
 		
+		x = range(0,len(hum_list))
 		if(self.Units == 'F'):
 			hum_list = [((i *  9/5)+32) for i in hum_list]
-			
-		print (hum_list)
 		
-		plt.plot(x, hum_list, pen='b', symbol='x', symbolPen='b', symbolBrush=0.2, name='red')
+		self.hum_plt.plot(x, hum_list, pen='r', symbolPen='b', symbolBrush=0.2)
 		
 		return hum_list
 
 #Function to get temperature entry and plot temperature graph	
 	def getTemperatureValFromDb(self):
-		x = range(0,10)
-		plt = pg.plot()
-		plt.setWindowTitle('Temperature plot')
+		self.temp_plt = pg.plot(title="Temperature Plot")
+		self.temp_plt.showGrid(x=True,y=True)
 		
+		self.temp_plt.setLabel('left', 'Temperature', units=self.Units)
+		self.temp_plt.setLabel('bottom', 'Number', units='')
+				
 		fetch_temp = "SELECT * FROM TEMP ORDER BY id DESC LIMIT 10"
 		self.cursor.execute(fetch_temp)
 		
 		temp_values = self.cursor.fetchall()
-		temp_list = [x[1] for x in temp_values]
+		temp_list = [temp[1] for temp in temp_values]
 		temp_list = list(map(float, temp_list))
+		
+		x = range(0,len(temp_list))
 		
 		if(self.Units == 'F'):
 			temp_list = [((i *  9/5)+32) for i in temp_list]
-			
-		print (temp_list)
-		
-		plt.plot(x, temp_list, pen='b', symbol='x', symbolPen='b', symbolBrush=0.2, name='blue')
+
+		self.temp_plt.plot(x, temp_list, pen='b', symbolPen='b', symbolBrush=0.2)
 		
 		return temp_list
 
+def main():
+	app = QtWidgets.QApplication([])
+	application = eid_project1()
+	application.show()
+	app.exec()
 
-app = QtWidgets.QApplication([])
-application = eid_project1()
-application.show()
-app.exec()
+
+if __name__ == "__main__":
+	main()
 
