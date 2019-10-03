@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+  <head>
+    <title>EID Project 2</title>
+    <meta charset="utf-8" />
+    <style type="text/css">
+      body {
+        text-align: center;
+        min-width: 500px;
+      }
+    </style>
+    <script src="http://code.jquery.com/jquery.min.js"></script>
+    <script>
+ 
+      // log function
+      log = function(data){
+        $("div#terminal").prepend("</br>" +data);
+        console.log(data);
+      };
+ 
+      $(document).ready(function () {
+        $("div#message_details").hide()
+ 
+        var ws;
+ 
+        // $("#open").click(function(evt) {
+        //   evt.preventDefault();
+ 
+          var host = $("#host").val();
+          var port = $("#port").val();
+          var uri = $("#uri").val();
+          var sentMsg;
+
+          // create websocket instance
+          ws = new WebSocket("ws://" + host + ":" + port + uri);
+           
+          // Handle incoming websocket message callback
+          ws.onmessage = function(evt) {
+            if(sentMsg == "temperatureReading")
+            {
+              document.getElementById("temperature").value= evt.data;
+            }
+            
+            if(sentMsg == "humidityReading")
+            {
+              document.getElementById("humidity").value= evt.data;
+            }
+            };
+ 
+          // Close Websocket callback
+          ws.onclose = function(evt) {
+            log("***Connection Closed***");
+            alert("Connection close");
+            $("div#message_details").empty();
+ 
+            };
+ 
+          // Open Websocket callback
+          ws.onopen = function(evt) { 
+            $("div#message_details").show();
+            log("***Connection Opened***");
+          };
+        // });
+
+         $("#button1").click(function(evt) {
+          console.log("Button1");
+          sentMsg = "temperatureReading"
+          ws.send("Get Temperature");
+         });
+         
+         $("#button2").click(function(evt) {
+          console.log("Button2");
+          sentMsg = "humidityReading"
+          ws.send("Get Humidity");
+         });
+
+         $("#button3").click(function(evt) {
+          console.log("Button3");
+          ws.send("Get node js");
+         });
+
+         $("#button4").click(function(evt) {
+          console.log("Button4");
+          ws.send("Get database");
+         });
+ 
+        // Send websocket message function
+        $("#send").click(function(evt) {
+            log("Sending Message: "+$("#message").val());
+            ws.send($("#message").val());
+        });
+
+      });
+    </script>
+  </head>
+ 
+  <body>
+    <h1>Temperature Humidity Meter</h1>
+    <button id="button1" value="button1">Get temperature</button>
+    <button id="button2" value="button2">Get humidity</button>
+    <button id="button3" value="button3">Get node js</button>
+    <button id="button4" value="button4">Get database</button>
+    <div id="connection_details">
+      <input type="text" id="host" value="localhost" style="display: none;"/><br />
+      <input type="text" id="port" value="8888" style="display: none;"/><br />
+      <input type="text" id="uri" value="/ws" style="display: none;"/><br />
+    </div>
+    <div id="message_details">
+        </br></br>
+        <label for="temperature">Temperature:</label>
+        <input type="text" id="temperature" value=""/><br />
+        <label for="humidity">Humidity:</label>
+        <input type="text" id="humidity" value=""/><br />
+    </div>
+
+    <div id="terminal">
+    <div id="here_table"/>
+        
+    </div>
+  </body>
+</html>
