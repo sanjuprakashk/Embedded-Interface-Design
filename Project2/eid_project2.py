@@ -303,14 +303,12 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         print('new connection')
 
     def on_message(self, message):
-        if(message == "Get Temperature"):
+        if(message == "Get Readings"):
             self.guiObject.getFromTornado = 1
             self.guiObject.getImmediateVal()
-            self.write_message(str(self.guiObject.tornadoTempVal))
-        elif(message == "Get Humidity"):
-            self.guiObject.getFromTornado = 1
-            self.guiObject.getImmediateVal()
-            self.write_message(str(self.guiObject.tornadoHumVal))
+            readings = {"Temperature" : str(self.guiObject.tornadoTempVal),\
+                        "Humidity" : str(self.guiObject.tornadoHumVal)}
+            self.write_message(readings)
 
     def on_close(self):
         print ('connection closed')

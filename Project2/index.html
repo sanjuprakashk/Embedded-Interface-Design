@@ -29,7 +29,7 @@
           var host = $("#host").val();
           var port = $("#port").val();
           var uri = $("#uri").val();
-          var temperature;
+            var temperature;
           var humidity;
           var sentMsg;
 
@@ -38,25 +38,24 @@
            
           // Handle incoming websocket message callback
           ws.onmessage = function(evt) {
-            if(sentMsg == "temperatureReading")
+            if(sentMsg == "getReadings")
             {
-              temperature = evt.data;
+              readings = $.parseJSON(evt.data);
+              console.log(readings.Temperature);
+              console.log(readings.Humidity);
+              temperature = readings.Temperature;
               if(document.getElementById("fahren").checked)
               {
-                document.getElementById("temperature").value = (temperature * 9/5) + 32;  
+                document.getElementById("temperature").value = (readings.Temperature * 9/5) + 32;  
               }
               else if(document.getElementById("celsius").checked)
               {
-                document.getElementById("temperature").value= temperature;
+                document.getElementById("temperature").value= readings.Temperature;
               }
               
-            }
-            
-            if(sentMsg == "humidityReading")
-            {
-              document.getElementById("humidity").value= evt.data;
-              humidity = evt.data;
-            }
+              document.getElementById("humidity").value = readings.Humidity
+              
+             }
             };
  
           // Close Websocket callback
@@ -76,23 +75,17 @@
 
          $("#button1").click(function(evt) {
           console.log("Button1");
-          sentMsg = "temperatureReading"
-          ws.send("Get Temperature");
+          sentMsg = "getReadings"
+          ws.send("Get Readings");
          });
          
          $("#button2").click(function(evt) {
           console.log("Button2");
-          sentMsg = "humidityReading"
-          ws.send("Get Humidity");
+          ws.send("Get node js");
          });
 
          $("#button3").click(function(evt) {
           console.log("Button3");
-          ws.send("Get node js");
-         });
-
-         $("#button4").click(function(evt) {
-          console.log("Button4");
           ws.send("Get database");
          });
  
@@ -116,10 +109,9 @@
  
   <body>
     <h1>Temperature Humidity Meter</h1>
-    <button id="button1" value="button1">Get temperature</button>
-    <button id="button2" value="button2">Get humidity</button>
-    <button id="button3" value="button3">Get node js</button>
-    <button id="button4" value="button4">Get database</button>
+    <button id="button1" value="button1">Get readings</button>
+    <button id="button3" value="button2">Get node js</button>
+    <button id="button4" value="button3">Get database</button>
     <div id="connection_details">
       <input type="text" id="host" value="localhost" style="display: none;"/><br />
       <input type="text" id="port" value="8888" style="display: none;"/><br />
@@ -135,9 +127,5 @@
         <input type="radio" name="unit" id="fahren" value="fahren"> F <br />
     </div>
 
-    <div id="terminal">
-    <div id="here_table"/>
-        
-    </div>
   </body>
 </html>
