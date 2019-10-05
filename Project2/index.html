@@ -29,6 +29,8 @@
           var host = $("#host").val();
           var port = $("#port").val();
           var uri = $("#uri").val();
+          var temperature;
+          var humidity;
           var sentMsg;
 
           // create websocket instance
@@ -38,12 +40,22 @@
           ws.onmessage = function(evt) {
             if(sentMsg == "temperatureReading")
             {
-              document.getElementById("temperature").value= evt.data;
+              temperature = evt.data;
+              if(document.getElementById("fahren").checked)
+              {
+                document.getElementById("temperature").value = (temperature * 9/5) + 32;  
+              }
+              else if(document.getElementById("celsius").checked)
+              {
+                document.getElementById("temperature").value= temperature;
+              }
+              
             }
             
             if(sentMsg == "humidityReading")
             {
               document.getElementById("humidity").value= evt.data;
+              humidity = evt.data;
             }
             };
  
@@ -89,7 +101,15 @@
             log("Sending Message: "+$("#message").val());
             ws.send($("#message").val());
         });
-
+        
+        $("#celsius").click(function(evt) {
+            document.getElementById("temperature").value = temperature;
+        });
+        
+         $("#fahren").click(function(evt) {
+            document.getElementById("temperature").value = (temperature * 9/5) + 32;
+        });
+        
       });
     </script>
   </head>
@@ -111,6 +131,8 @@
         <input type="text" id="temperature" value=""/><br />
         <label for="humidity">Humidity:</label>
         <input type="text" id="humidity" value=""/><br />
+        <input type="radio" name="unit" id="celsius" value="celsius" checked> C
+        <input type="radio" name="unit" id="fahren" value="fahren"> F <br />
     </div>
 
     <div id="terminal">
