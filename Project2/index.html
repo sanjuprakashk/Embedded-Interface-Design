@@ -14,24 +14,28 @@
  
       // log function
       log = function(data){
-        $("div#terminal").prepend("</br>" +data);
         console.log(data);
       };
  
       $(document).ready(function () {
         $("div#message_details").hide()
+        $("#humidty_table_from_python_time").hide();
+        $("#humidty_table_from_python").hide();
  
         var ws;
  
         // $("#open").click(function(evt) {
         //   evt.preventDefault();
- 
+          
           var host = $("#host").val();
           var port = $("#port").val();
           var uri = $("#uri").val();
-            var temperature;
+          var temperature;
           var humidity;
           var sentMsg;
+          
+          var pythonDbStartTime;
+          var pythonDbEndTime;
 
           // create websocket instance
           ws = new WebSocket("ws://" + host + ":" + port + uri);
@@ -56,6 +60,53 @@
               document.getElementById("humidity").value = readings.Humidity
               
              }
+             
+             else if(sentMsg = "getHumFromDatabase")
+             {
+              humList = $.parseJSON(evt.data);
+              pythonDbEndTime = new Date();
+              $("#humidty_table_from_python tbody tr:not(:first-child)").remove();
+              $("#humidty_table_from_python_time tbody tr:not(:first-child)").remove();
+              for(key in humList)
+              {
+                console.log(key);
+                new_row = "<tr>";
+                new_row += "<td>";
+                new_row += key;
+                new_row += "</td>";
+                new_row += "<td>";
+                new_row += humList[key];
+                new_row += "</td>";
+                new_row += "</tr>";
+                $('#humidty_table_from_python tr:last').after(new_row);
+              }
+              console.log("Start time = ");
+              console.log(pythonDbStartTime);
+              
+              console.log("End time = ");
+              console.log(pythonDbEndTime);
+              
+              console.log("Total time = ");
+              console.log(pythonDbEndTime - pythonDbStartTime);
+              
+              new_row = "<tr>";
+              new_row += "<td>";
+              new_row += pythonDbStartTime;
+              new_row += "</td>";
+              new_row += "<td>";
+              new_row += pythonDbEndTime;
+              new_row += "</td>";
+              new_row += "<td>";
+              new_row += pythonDbEndTime - pythonDbStartTime;
+              new_row += "</td>";
+              new_row += "</tr>";
+              $('#humidty_table_from_python_time tr:last').after(new_row);
+              
+              $('#humidty_table_from_python_time').show();
+              
+             }
+             
+             
             };
  
           // Close Websocket callback
@@ -75,7 +126,7 @@
 
          $("#button1").click(function(evt) {
           console.log("Button1");
-          sentMsg = "getReadings"
+          sentMsg = "getReadings";
           ws.send("Get Readings");
          });
          
@@ -86,7 +137,10 @@
 
          $("#button3").click(function(evt) {
           console.log("Button3");
-          ws.send("Get database");
+          pythonDbStartTime = new Date();
+          sentMsg = "getHumFromDatabase";
+          ws.send("Humidity from database");
+          $('#humidty_table_from_python').show();
          });
  
         // Send websocket message function
@@ -110,8 +164,9 @@
   <body>
     <h1>Temperature Humidity Meter</h1>
     <button id="button1" value="button1">Get readings</button>
-    <button id="button3" value="button2">Get node js</button>
-    <button id="button4" value="button3">Get database</button>
+    <button id="button2" value="button2">Get node js</button>
+    <button id="button3" value="button3">Get humidity from database</button>
+    
     <div id="connection_details">
       <input type="text" id="host" value="localhost" style="display: none;"/><br />
       <input type="text" id="port" value="8888" style="display: none;"/><br />
@@ -126,6 +181,23 @@
         <input type="radio" name="unit" id="celsius" value="celsius" checked> C
         <input type="radio" name="unit" id="fahren" value="fahren"> F <br />
     </div>
+    
+    <table border="1" style="width:100%" id="humidty_table_from_python">
+        <caption>Python MySQL</caption>
+        <tr>
+            <th>Entry number</th>
+            <th>Humidity</th>
+        </tr>
+    </table>
+    
+    <table border="1" style="width:100%" id="humidty_table_from_python_time">
+        <caption>Time taken</caption>
+        <tr>
+            <th>Start time</th>
+            <th>End time</th>
+            <th>Transcation time[ms]</th>
+        </tr>
+    </table>
 
   </body>
 </html>

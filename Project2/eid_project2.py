@@ -239,12 +239,6 @@ class eid_project2(QtWidgets.QDialog):
         '''
         Function to get humidity entry DB and plot humidity graph
         '''
-        self.hum_plt = pg.plot(title="Humidity Plot")
-        self.hum_plt.showGrid(x=True, y=True)
-
-        self.hum_plt.setLabel('left', 'Humidity', units='%')
-        self.hum_plt.setLabel('bottom', 'Number', units='')
-
         fetch_humid = "SELECT * FROM HUMID ORDER BY id DESC LIMIT 10"
         self.cursor.execute(fetch_humid)
 
@@ -259,8 +253,16 @@ class eid_project2(QtWidgets.QDialog):
 
         if(self.Units == 'F'):
             hum_list = [((i * 9/5) + 32) for i in hum_list]
-
-        self.hum_plt.plot(x, hum_list, pen='r', symbolPen='b', symbolBrush=0.2)
+        
+        if(self.getFromTornado == 0):
+            self.hum_plt = pg.plot(title="Humidity Plot")
+            self.hum_plt.showGrid(x=True, y=True)
+            self.hum_plt.setLabel('left', 'Humidity', units='%')
+            self.hum_plt.setLabel('bottom', 'Number', units='')
+            self.hum_plt.plot(x, hum_list, pen='r', symbolPen='b', symbolBrush=0.2)
+        else:
+            self.tornadoHumList = dict(zip(x, hum_list))
+            self.getFromTornado = 0
 
         return hum_list
 
@@ -309,6 +311,10 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             readings = {"Temperature" : str(self.guiObject.tornadoTempVal),\
                         "Humidity" : str(self.guiObject.tornadoHumVal)}
             self.write_message(readings)
+        elif(message == "Humidity from database"):
+            self.guiObject.getFromTornado = 1
+            self.guiObject.getHumidityValFromDb()
+            self.write_message(self.guiObject.tornadoHumList)
 
     def on_close(self):
         print ('connection closed')
