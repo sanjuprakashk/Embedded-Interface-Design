@@ -34,9 +34,24 @@
           var humidity;
           var sentMsg;
           
+          var sentMsgNode;
+          
           var pythonDbStartTime;
           var pythonDbEndTime;
-
+          
+          const ws_js = new WebSocket('ws://localhost:9898/');
+          ws_js.onopen = function() {
+          console.log('WebSocket Client Connected');
+          };
+          
+          ws_js.onmessage = function(evt) {
+            if(sentMsgNode == "getReadings")
+            {
+              humList = evt.data;
+              console.log(humList);
+            }
+          };
+          
           // create websocket instance
           ws = new WebSocket("ws://" + host + ":" + port + uri);
            
@@ -132,7 +147,8 @@
          
          $("#button2").click(function(evt) {
           console.log("Button2");
-          ws.send("Get node js");
+          sentMsgNode = "getReadings";
+          ws_js.send('getReadings');
          });
 
          $("#button3").click(function(evt) {
@@ -141,6 +157,12 @@
           sentMsg = "getHumFromDatabase";
           ws.send("Humidity from database");
           $('#humidty_table_from_python').show();
+         });
+         
+          $("#button4").click(function(evt) {
+          console.log("Button4");
+          sentMsgNode = "getHumFromNodeDatabase";
+          ws_js.send('GetLast10HumVal');
          });
  
         // Send websocket message function
@@ -165,7 +187,8 @@
     <h1>Temperature Humidity Meter</h1>
     <button id="button1" value="button1">Get readings</button>
     <button id="button2" value="button2">Get node js</button>
-    <button id="button3" value="button3">Get humidity from database</button>
+    <button id="button3" value="button3">Get humidity from python database</button>
+    <button id="button4" value="button4">Get humidity from node database</button>
     
     <div id="connection_details">
       <input type="text" id="host" value="localhost" style="display: none;"/><br />
