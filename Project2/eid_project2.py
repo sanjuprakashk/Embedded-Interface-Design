@@ -316,6 +316,10 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             self.guiObject.getFromTornado = 1
             self.guiObject.getHumidityValFromDb()
             self.write_message(self.guiObject.tornadoHumList)
+        elif(message == "Get humidity from tornado"):
+            self.guiObject.getFromTornado = 1
+            self.guiObject.getHumidityValFromDb()
+            self.write_message(self.guiObject.tornadoHumList)
 
     def on_close(self):
         print ('connection closed')
