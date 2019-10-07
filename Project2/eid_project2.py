@@ -14,6 +14,7 @@ import tornado.web
 import socket
 import asyncio
 
+import subprocess
 
 class eid_project2(QtWidgets.QDialog):
     '''
@@ -336,6 +337,7 @@ def main():
     '''
     Main function that executes the GUI 
     '''
+    node_process = subprocess.Popen(["node", "web_socket_server.js"])
     app = QtWidgets.QApplication([])
     application = eid_project2()
     application.show()

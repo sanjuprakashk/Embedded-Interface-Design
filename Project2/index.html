@@ -8,6 +8,11 @@
       text-align: center;
       min-width: 500px;
     }
+    caption {
+      display: table-caption;
+      text-align: center;
+      font-weight: bold;
+      }
   </style>
   <script src="http://code.jquery.com/jquery.min.js"></script>
   <script>
@@ -18,221 +23,274 @@
       };
       
       $(document).ready(function () {
-        $("div#python_details").hide();
-        $("#humidty_table_from_python_time").hide();
-        $("#humidty_table_from_python").hide();
+        $("div#tornado_details").hide();
+        $("#humidty_table_from_tornado_time").hide();
+        $("#humidty_table_from_tornado").hide();
         $("div#nodejs_details").hide();
         $("#humidty_table_from_node").hide();
+        $("#humidty_table_from_node_time").hide();
         
         var ws;
-        
-        // $("#open").click(function(evt) {
-        //   evt.preventDefault();
+        var ws_js;
         
         var host = $("#host").val();
         var port = $("#port").val();
         var uri = $("#uri").val();
-        var temperaturePython;
-        var humidityPython;
+        var temperatureTornado;
+        var humidityTornado;
         var temperatureNode;
         var humidityNode;
         var sentMsg;
         
         var sentMsgNode;
         
-        var pythonDbStartTime;
-        var pythonDbEndTime;
+        var tornadoDbStartTime;
+        var tornadoDbEndTime;
         
         var nodeDbStartTime;
         var nodeDbEndTime;
+
+        var nodeConnected = 0;
+        var tornadoConnected = 0;
         
-        const ws_js = new WebSocket('ws://localhost:9898/');
-        ws_js.onopen = function() {
-          console.log('WebSocket Client Connected');
+        try {
+          ws_js = new WebSocket('ws://localhost:9898/');
+        }
+        catch(error) {
+          console.log(error);
+        }
+        
+        ws_js.onopen = function(evt) { 
+            log("***Node js Connection Opened***");
+            nodeConnected = 1;
+          };
+
+        ws_js.onclose = function(evt) {
+            log("***node js connection closed***");  
+            nodeConnected = 0;          
         };
         
-        ws_js.onmessage = function(evt) {
-          if(sentMsgNode == "getReadings")
-          {
-            $("div#nodejs_details").show();
-            console.log(evt.data.trim())
-            readings = JSON.parse(evt.data.toString().trim());
-            console.log(readings.temp);
-            console.log(readings.hum);
-            temperatureNode = readings.temp;
-            if(document.getElementById("fahren").checked)
-            {
-              document.getElementById("temperatureNode").value = (readings.temp * 9/5) + 32;  
-            }
-            else if(document.getElementById("celsius").checked)
-            {
-              document.getElementById("temperatureNode").value= readings.temp;
-            }
-            
-            document.getElementById("humidityNode").value = readings.hum
+        
+        ws_js.onerror = function(evt) {
+            console.log("Node js connection failed at startup");
           }
-          
-          else if(sentMsgNode = "getHumFromNodeDatabase")
-          {
-            humList = $.parseJSON(evt.data);
-            console.log(humList);
-            nodeDbEndTime = new Date();
-            $("#humidty_table_from_node tbody tr:not(:first-child)").remove();
-            $("#humidty_table_from_node_time tbody tr:not(:first-child)").remove();
-              for(key in humList)
-              {
-                console.log(key);
-                new_row = "<tr>";
-                new_row += "<td>";
-                new_row += key;
-                new_row += "</td>";
-                new_row += "<td>";
-                new_row += humList[key].Humd;
-                new_row += "</td>";
-                new_row += "</tr>";
-                $('#humidty_table_from_node tr:last').after(new_row);
-              }
-              
-              $("#humidty_table_from_node").show();
-              
-              console.log("Start time = ");
-              console.log(nodeDbStartTime);
-              
-              console.log("End time = ");
-              console.log(nodeDbEndTime);
-              
-              console.log("Total time = ");
-              console.log(nodeDbEndTime - nodeDbStartTime);
-              
-              new_row = "<tr>";
-              new_row += "<td>";
-              new_row += nodeDbStartTime;
-              new_row += "</td>";
-              new_row += "<td>";
-              new_row += nodeDbEndTime;
-              new_row += "</td>";
-              new_row += "<td>";
-              new_row += nodeDbEndTime - nodeDbStartTime;
-              new_row += "</td>";
-              new_row += "</tr>";
-              $('#humidty_table_from_node_time tr:last').after(new_row);
-              
-              $('#humidty_table_from_node_time').show();
-            }             
 
-          };
-          
-          // create websocket instance
-          ws = new WebSocket("ws://" + host + ":" + port + uri);
-          
-          // Handle incoming websocket message callback
-          ws.onmessage = function(evt) {
-            if(sentMsg == "getReadings")
+        ws_js.onmessage = function(evt) {
+          if(nodeConnected == 1) {
+            if(sentMsgNode == "getReadings")
             {
-              console.log(evt.data)
-              $("div#python_details").show();
-              readings = $.parseJSON(evt.data);
-              console.log(readings.Temperature);
-              console.log(readings.Humidity);
-              temperaturePython = readings.Temperature;
+              $("div#nodejs_details").show();
+              console.log(evt.data.trim())
+              readings = JSON.parse(evt.data.toString().trim());
+              console.log(readings.temp);
+              console.log(readings.hum);
+              temperatureNode = readings.temp;
               if(document.getElementById("fahren").checked)
               {
-                document.getElementById("temperaturePython").value = (readings.Temperature * 9/5) + 32;  
+                document.getElementById("temperatureNode").value = (readings.temp * 9/5) + 32;  
               }
               else if(document.getElementById("celsius").checked)
               {
-                document.getElementById("temperaturePython").value= readings.Temperature;
+                document.getElementById("temperatureNode").value= readings.temp;
               }
               
-              document.getElementById("humidityPython").value = readings.Humidity
-              
+              document.getElementById("humidityNode").value = readings.hum
             }
             
-            else if(sentMsg = "getHumFromPythonDatabase")
+            else if(sentMsgNode = "getHumFromNodeDatabase")
             {
               humList = $.parseJSON(evt.data);
-              console.log(humList);
-              pythonDbEndTime = new Date();
-              $("#humidty_table_from_python tbody tr:not(:first-child)").remove();
-              $("#humidty_table_from_python_time tbody tr:not(:first-child)").remove();
-              for(key in humList)
-              {
-                console.log(key);
+              nodeDbEndTime = new Date();
+              $("#humidty_table_from_node tbody tr:not(:first-child)").remove();
+              $("#humidty_table_from_node_time tbody tr:not(:first-child)").remove();
+                for(key in humList)
+                {
+                  new_row = "<tr>";
+                  new_row += "<td>";
+                  new_row += key;
+                  new_row += "</td>";
+                  new_row += "<td>";
+                  new_row += humList[key].Humd;
+                  new_row += "</td>";
+                  new_row += "</tr>";
+                  $('#humidty_table_from_node tr:last').after(new_row);
+                }
+                
+                $("#humidty_table_from_node").show();
+                
+                console.log("Start time = ");
+                console.log(nodeDbStartTime);
+                
+                console.log("End time = ");
+                console.log(nodeDbEndTime);
+                
+                console.log("Total time = ");
+                console.log(nodeDbEndTime - nodeDbStartTime);
+                
                 new_row = "<tr>";
                 new_row += "<td>";
-                new_row += key;
+                new_row += nodeDbStartTime;
                 new_row += "</td>";
                 new_row += "<td>";
-                new_row += humList[key];
+                new_row += nodeDbEndTime;
+                new_row += "</td>";
+                new_row += "<td>";
+                new_row += nodeDbEndTime - nodeDbStartTime;
                 new_row += "</td>";
                 new_row += "</tr>";
-                $('#humidty_table_from_python tr:last').after(new_row);
-              }
-              console.log("Start time = ");
-              console.log(pythonDbStartTime);
-              
-              console.log("End time = ");
-              console.log(pythonDbEndTime);
-              
-              console.log("Total time = ");
-              console.log(pythonDbEndTime - pythonDbStartTime);
-              
-              new_row = "<tr>";
-              new_row += "<td>";
-              new_row += pythonDbStartTime;
-              new_row += "</td>";
-              new_row += "<td>";
-              new_row += pythonDbEndTime;
-              new_row += "</td>";
-              new_row += "<td>";
-              new_row += pythonDbEndTime - pythonDbStartTime;
-              new_row += "</td>";
-              new_row += "</tr>";
-              $('#humidty_table_from_python_time tr:last').after(new_row);
-              
-              $('#humidty_table_from_python_time').show();
-            }             
+                $('#humidty_table_from_node_time tr:last').after(new_row);
+                
+                $('#humidty_table_from_node_time').show();
+              }             
+            }
+
+            else {
+              console.log("Connection to node js not established")
+              alert("Connection to node js not established")
+            }
           };
           
-          // Close Websocket callback
-          ws.onclose = function(evt) {
-            log("***Connection Closed***");
-            alert("Connection close");
-            $("div#python_details").empty();
-            
-          };
+          ws = new WebSocket("ws://" + host + ":" + port + uri);
+
           
           // Open Websocket callback
           ws.onopen = function(evt) { 
-            log("***Connection Opened***");
+            log("***Tornado Connection Opened***");
+            tornadoConnected = 1;
           };
-        // });
 
+          ws.onclose = function(evt) {
+            log("***Tornado connection closed***");   
+            tornadoConnected = 0;         
+          };
+          
+          ws.onerror = function(evt) {
+            console.log("Tornado connection failed at startup");
+          }
+          
+
+          ws.onmessage = function(evt) {
+            if(tornadoConnected == 1) {
+              if(sentMsg == "getReadings")
+              {
+                console.log(evt.data)
+                $("div#tornado_details").show();
+                readings = $.parseJSON(evt.data);
+                console.log(readings.Temperature);
+                console.log(readings.Humidity);
+                temperatureTornado = readings.Temperature;
+                if(document.getElementById("fahren").checked)
+                {
+                  document.getElementById("temperatureTornado").value = (readings.Temperature * 9/5) + 32;  
+                }
+                else if(document.getElementById("celsius").checked)
+                {
+                  document.getElementById("temperatureTornado").value= readings.Temperature;
+                }
+                
+                document.getElementById("humidityTornado").value = readings.Humidity
+                
+              }
+              
+              else if(sentMsg = "getHumFromTornadoDatabase")
+              {
+                humList = $.parseJSON(evt.data);
+                tornadoDbEndTime = new Date();
+                $("#humidty_table_from_tornado tbody tr:not(:first-child)").remove();
+                $("#humidty_table_from_tornado_time tbody tr:not(:first-child)").remove();
+                for(key in humList)
+                {
+                  new_row = "<tr>";
+                  new_row += "<td>";
+                  new_row += key;
+                  new_row += "</td>";
+                  new_row += "<td>";
+                  new_row += humList[key];
+                  new_row += "</td>";
+                  new_row += "</tr>";
+                  $('#humidty_table_from_tornado tr:last').after(new_row);
+                }
+                console.log("Start time = ");
+                console.log(tornadoDbStartTime);
+                
+                console.log("End time = ");
+                console.log(tornadoDbEndTime);
+                
+                console.log("Total time = ");
+                console.log(tornadoDbEndTime - tornadoDbStartTime);
+                
+                new_row = "<tr>";
+                new_row += "<td>";
+                new_row += tornadoDbStartTime;
+                new_row += "</td>";
+                new_row += "<td>";
+                new_row += tornadoDbEndTime;
+                new_row += "</td>";
+                new_row += "<td>";
+                new_row += tornadoDbEndTime - tornadoDbStartTime;
+                new_row += "</td>";
+                new_row += "</tr>";
+                $('#humidty_table_from_tornado_time tr:last').after(new_row);
+                
+                $('#humidty_table_from_tornado_time').show();
+              }
+            }
+
+            else {
+              console.log("Connection to tornado not established");
+              alert("Connection to tornado not established");
+            }             
+          };
+          
         $("#button1").click(function(evt) {
           console.log("Button1");
-          sentMsg = "getReadings";
-          ws.send("Get Readings");
+          if(tornadoConnected == 1) {
+            sentMsg = "getReadings";
+            ws.send("Get Readings");
+          }
+          else {
+            console.log("Connection tornado not established");
+            alert("Connection to tornado not established");
+          }
         });
         
         $("#button2").click(function(evt) {
           console.log("Button2");
-          sentMsgNode = "getReadings";
-          ws_js.send('getReadings');
+          if(nodeConnected == 1) {
+            sentMsgNode = "getReadings";
+            ws_js.send('getReadings');
+          }
+          else {
+            console.log("Connection node js not established");
+            alert("Connection to node js not established");
+          }
         });
 
         $("#button3").click(function(evt) {
           console.log("Button3");
-          pythonDbStartTime = new Date();
-          sentMsg = "getHumFromPythonDatabase";
-          ws.send("Humidity from database");
-          $('#humidty_table_from_python').show();
+          if(tornadoConnected == 1) {
+            tornadoDbStartTime = new Date();
+            sentMsg = "getHumFromTornadoDatabase";
+            ws.send("Humidity from database");
+            $('#humidty_table_from_tornado').show();
+          }
+          else {
+            console.log("Connection tornado not established");
+            alert("Connection to tornado not established");
+          }
         });
         
         $("#button4").click(function(evt) {
           console.log("Button4");
-          nodeDbStartTime = new Date();
-          sentMsgNode = "getHumFromNodeDatabase";
-          ws_js.send('GetLast10HumVal');
+          if(nodeConnected == 1) {
+            nodeDbStartTime = new Date();
+            sentMsgNode = "getHumFromNodeDatabase";
+            ws_js.send('GetLast10HumVal');
+          }
+          else {
+            console.log("Connection node js not established");
+            alert("Connection to node js not established");
+          }
         });
         
         // Send websocket message function
@@ -242,12 +300,12 @@
         });
         
         $("#celsius").click(function(evt) {
-          document.getElementById("temperaturePython").value = temperaturePython;
+          document.getElementById("temperatureTornado").value = temperatureTornado;
           document.getElementById("temperatureNode").value = temperatureNode;
         });
         
         $("#fahren").click(function(evt) {
-          document.getElementById("temperaturePython").value = (temperaturePython * 9/5) + 32;
+          document.getElementById("temperatureTornado").value = (temperatureTornado * 9/5) + 32;
           document.getElementById("temperatureNode").value = (temperatureNode * 9/5) + 32;
         });
         
@@ -257,26 +315,27 @@
   
   <body>
     <h1>Temperature Humidity Meter</h1>
-    <button id="button1" value="button1">Get readings</button>
-    <button id="button2" value="button2">Get node js</button>
-    <button id="button3" value="button3">Get humidity from python database</button>
-    <button id="button4" value="button4">Get humidity from node database</button>
+    <button id="button1" value="button1" style="background-color:red">Get readings from tornado</button>
+    <button id="button2" value="button2" style="background-color:blue">Get readings from node js</button>
+    <button id="button3" value="button3" style="background-color:green">Get humidity from tornado database</button>
+    <button id="button4" value="button4" style="background-color:yellow">Get humidity from node database</button>
     
     <div id="connection_details">
-      <input type="text" id="host" value="localhost" style="display: none;"/><br />
+      <input type="text" id="host" value="10.0.0.223" style="display: none;"/><br />
       <input type="text" id="port" value="8888" style="display: none;"/><br />
       <input type="text" id="uri" value="/ws" style="display: none;"/><br />
     </div>
-    <div id="python_deails">
+
+    <div id="tornado_details">
     </br></br>
-    <label for="temperaturePython">Temperature from python:</label>
-    <input type="text" id="temperaturePython" value=""/><br />
-    <label for="humidityPython">Humidity from python:</label>
-    <input type="text" id="humidityPython" value=""/><br />
-    
-    <input type="radio" name="unit" id="celsius" value="celsius" checked> C
-    <input type="radio" name="unit" id="fahren" value="fahren"> F <br />
+    <label for="temperatureTornado">Temperature from tornado:</label>
+    <input type="text" id="temperatureTornado" value=""/><br />
+    <label for="humidityTornado">Humidity from tornado:</label>
+    <input type="text" id="humidityTornado" value=""/><br />
   </div>
+  
+  <input type="radio" name="unit" id="celsius" value="celsius" checked> C
+  <input type="radio" name="unit" id="fahren" value="fahren"> F <br />
   
   <div id="nodejs_details">
     <label for="temperatureNode">Temperature from node js:</label>
@@ -286,8 +345,8 @@
   </div>
   
   <br />
-  <table border="1" style="width:100%" id="humidty_table_from_python">
-    <caption>Python MySQL</caption>
+  <table border="1" style="width:100%" id="humidty_table_from_tornado">
+    <caption>Tornado MySQL</caption>
     <tr>
       <th>Entry number</th>
       <th>Humidity</th>
@@ -304,8 +363,8 @@
   </table>
   
   <br />
-  <table border="1" style="width:100%" id="humidty_table_from_python_time">
-    <caption>Time taken by python</caption>
+  <table border="1" style="width:100%" id="humidty_table_from_tornado_time">
+    <caption>Time taken by tornado</caption>
     <tr>
       <th>Start time</th>
       <th>End time</th>
