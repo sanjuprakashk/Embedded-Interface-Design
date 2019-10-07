@@ -1,3 +1,22 @@
+#!/usr/bin/python3 
+
+'''
+eid_project2.py: This file contains the code that spawns the GUI,
+                 tornado server and node js server for project 2
+
+@developers: Sanju Prakash Kannioth, Srinath Shanmuganadhan
+
+@date: 10/07/2019
+
+@references: https://askubuntu.com/questions/1014947/mysql-connector-python-importerror-no-module-named-mysql  
+             https://www.youtube.com/watch?v=lCfSKtPADYw  
+             https://github.com/adafruit/Adafruit_Python_DHT/blob/master/examples/AdafruitDHT.py  
+             https://pythonprogramminglanguage.com/pyqtgraph-plot/
+             https://www.programcreek.com/python/example/99607/PyQt5.QtCore.QTimer
+             https://os.mbed.com/cookbook/Websockets-Server  
+             http://www.tornadoweb.org/en/stable/  
+             https://wiki.python.org/moin/WebServers
+''' 
 from PyQt5 import QtWidgets, QtGui, QtCore
 from eid_project2_ui import Ui_Dialog
 import sys
@@ -299,29 +318,48 @@ class eid_project2(QtWidgets.QDialog):
 
 
 class WSHandler(tornado.websocket.WebSocketHandler):
+    '''
+        Class containing tornado web socket handlers
+    '''
     def initialize(self, guiObject):
+        '''
+        Function to get Init websocket
+        '''
         self.guiObject = guiObject
 
     def open(self):
+        '''
+        Function called when web socket is opened
+        '''
         print('new connection')
 
     def on_message(self, message):
+        '''
+        Function called when message is received from HTML client
+        '''
+
+        # Condition for getting immediate reading from python app
         if(message == "Get Readings"):
             self.guiObject.getFromTornado = 1
             self.guiObject.getImmediateVal()
             readings = {"Temperature" : str(self.guiObject.tornadoTempVal),\
                         "Humidity" : str(self.guiObject.tornadoHumVal)}
             self.write_message(readings)
+        # Condition for getting humidty from db for tabular display
         elif(message == "Humidity from database"):
             self.guiObject.getFromTornado = 1
             self.guiObject.getHumidityValFromDb()
             self.write_message(self.guiObject.tornadoHumList)
+        # Condition for getting humidty from db for graph display
         elif(message == "Get humidity from tornado"):
             self.guiObject.getFromTornado = 1
             self.guiObject.getHumidityValFromDb()
             self.write_message(self.guiObject.tornadoHumList)
 
     def on_close(self):
+        '''
+        Function called when web socket is closed
+        '''
         print ('connection closed')
 
     def check_origin(self, origin):
@@ -329,6 +367,9 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
 
 def thread_tornado(application):
+    '''
+       Thread callback to spawn tornado web socket
+    '''
     asyncio.set_event_loop(asyncio.new_event_loop())
     application = tornado.web.Application([
     (r'/ws', WSHandler, {'guiObject': application}),
@@ -339,24 +380,25 @@ def thread_tornado(application):
 
 def main():
     '''
-    Main function that executes the GUI 
+    Main function that executes the GUI, node js server and tornado server
     '''
+    # Spawn node js server
     node_process = subprocess.Popen(["node", "web_socket_server.js"])
+
+    # spawn gui
     app = QtWidgets.QApplication([])
     application = eid_project2()
     application.show()
 
-    # thread1 = threading.Thread(target=thread_qt, args=(application,))
+    # Thread to spawn tornado server
     thread2 = threading.Thread(target=thread_tornado, args=(application,))
 
+    # Set thread as daemon; does not need to be joined
     thread2.setDaemon(True)
 
-    # thread1.start()
     thread2.start()
 
     app.exec()
-    
-    # thread2.join()
 
 if __name__ == "__main__":
     main()
