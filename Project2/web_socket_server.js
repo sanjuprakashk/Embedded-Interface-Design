@@ -23,17 +23,7 @@ con.connect(function(err) {
 wsServer.on('request', function(request) {
     const connection = request.accept(null, request.origin);
     connection.on('message', function(message) {
-    if(message.utf8Data == "GetImmediateHumVal") {
-      console.log('Received Message:', message.utf8Data);
-      var ret = [];
-      con.query("SELECT Humd FROM HUMID ORDER BY id DESC LIMIT 1", function (err, result, fields) {
-      if (err) throw err;
-        ret = JSON.stringify(result);
-        console.log(ret);
-        connection.sendUTF(ret);
     
-      });
-    }
     var ret_hum;
     var ret_temp;
     var readings;
@@ -54,7 +44,7 @@ wsServer.on('request', function(request) {
         ret_temp = result_temp[0].Temp
         console.log('ret_temp:', result_temp[0].Temp);
         
-        readings = {temp:ret_temp, hum:ret_hum};
+        const readings = { "temp" : ret_temp, "hum" : ret_hum };
         console.log('ret:', readings);
         
         connection.sendUTF(JSON.stringify(readings));
@@ -67,13 +57,34 @@ wsServer.on('request', function(request) {
     if(message.utf8Data == "GetLast10HumVal") {
       //console.log('Received Message:', message.utf8Data);
       var ret = [];
-      con.query("SELECT Humd FROM HUMID ORDER BY id DESC LIMIT 3", function (err, result, fields) {
+      var hum_readings = [];
+      var hum_readings_arr = [];
+      con.query("SELECT Humd FROM HUMID ORDER BY id DESC LIMIT 10", function (err, result, fields) {
       if (err) throw err;
-        ret = JSON.stringify(result);
+        var ret_10hum = [];
+        /*var j =9;
+        for (var i = 0;i<10;i++){
+          ret_10hum[i] = result[i].Humd;
+          hum_readings = { "hum" : ret_10hum[i] };
+          j--;
+          hum_readings_arr.push(hum_readings);
+        }
+        console.log('ret_10_hum:', hum_readings_arr);*/
+        console.log(result);
+        var ReverseArray = [];
+        var length = result.length;
+        for(var i = length-1;i>=0;i--){
+            ReverseArray.push(result[i]);
+        }
+        console.log("actual array");
+        console.log(JSON.stringify(result));
+        console.log("reverse array");
+        console.log(JSON.stringify(ReverseArray));
         //console.log(ret);
-        connection.sendUTF(ret);
+        connection.sendUTF(JSON.stringify(ReverseArray));
       });
     }
+    
     
     else {
       console.log('Received Message: NULL');
