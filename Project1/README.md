@@ -39,7 +39,7 @@ Connect DHT22 sensor gnd pin to pin 6 on the RPI
 Connect DHT22 sensor data pin to pin 7 on the RPI  
 
 ## Instruction to run program
-From this directory do - python3 Project1/eid_project1.py  
+From this directory do - python3 eid_project1.py  
 
 ## Project Work
 
