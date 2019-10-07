@@ -50,8 +50,7 @@ nvm install 10.16.3
 npm install webserver  
 
 ### tonado
-pip3 install tornado  
-pip3 install threading  
+pip3 install tornado    
 pip3 install asyncio  
 
 ## Instruction to run program
