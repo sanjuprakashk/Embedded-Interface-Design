@@ -366,11 +366,7 @@ eid_project2.html: This file contains the code that spawns the html page for pro
             console.log("Connection tornado not established");
             alert("Connection to tornado not established");
           }
-        });
-        
-        // callback function for when button 4 is pressed
-        $("#button4").click(function(evt) {
-          console.log("Button4");
+
           if(nodeConnected == 1) {
             nodeDbStartTime = new Date();
             sentMsgNode = "getHumFromNodeDatabase";
@@ -381,9 +377,10 @@ eid_project2.html: This file contains the code that spawns the html page for pro
             alert("Connection to node js not established");
           }
         });
-
-         $("#button5").click(function(evt) {
-          console.log("Button5");
+        
+        
+         $("#button4").click(function(evt) {
+          console.log("Button4");
           if(tornadoConnected == 1) {
             sentMsg = "getHumGraph";
             ws.send('Get humidity from tornado');
@@ -415,9 +412,8 @@ eid_project2.html: This file contains the code that spawns the html page for pro
     <!-- buttons for project 2 functionality -->
     <button id="button1" value="button1" style="background-color:red">Get readings from tornado</button>
     <button id="button2" value="button2" style="background-color:blue">Get readings from node js</button>
-    <button id="button3" value="button3" style="background-color:green">Get humidity from tornado database</button>
-    <button id="button4" value="button4" style="background-color:yellow">Get humidity from node database</button>
-    <button id="button5" value="button5" style="background-color:orange">Get humidity graph</button>
+    <button id="button3" value="button3" style="background-color:green">Get humidity from database</button>
+    <button id="button4" value="button4" style="background-color:orange">Get humidity graph</button>
 
     <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
     
