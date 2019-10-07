@@ -49,6 +49,7 @@ eid_project2.html: This file contains the code that spawns the html page for pro
         $("div#nodejs_details").hide();
         $("#humidty_table_from_node").hide();
         $("#humidty_table_from_node_time").hide();
+        $("div#radio_buttons").hide();
         
         var ws; // web socket object for tornado connection
         var ws_js; // web socket object for node js connection
@@ -328,6 +329,7 @@ eid_project2.html: This file contains the code that spawns the html page for pro
         $("#button1").click(function(evt) {
           console.log("Button1");
           if(tornadoConnected == 1) {
+            $("div#radio_buttons").show();
             sentMsg = "getReadings";
             ws.send("Get Readings");
           }
@@ -341,6 +343,7 @@ eid_project2.html: This file contains the code that spawns the html page for pro
         $("#button2").click(function(evt) {
           console.log("Button2");
           if(nodeConnected == 1) {
+            $("div#radio_buttons").show();
             sentMsgNode = "getReadings";
             ws_js.send('getReadings');
           }
@@ -434,8 +437,10 @@ eid_project2.html: This file contains the code that spawns the html page for pro
     <input type="text" id="humidityTornado" value=""/><br />
   </div>
   
+  <div id="radio_buttons">
   <input type="radio" name="unit" id="celsius" value="celsius" checked> C
   <input type="radio" name="unit" id="fahren" value="fahren"> F <br />
+  </div>
   
   <div id="nodejs_details">
     <label for="temperatureNode">Temperature from node js:</label>
