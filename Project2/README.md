@@ -66,7 +66,7 @@ Worked with Tornado Webserver and HTML Client
 
 ## Error Conditions
 
-If server is not running, clicking of button on the HTML will pop up Error message that the required server is unavailable
+If server is not running, clicking of button on the HTML will pop up Error message that the required server is unavailable  
 If the DHT22 does not respond, error is displayed on the HTML page
 
 ## Extra credit
