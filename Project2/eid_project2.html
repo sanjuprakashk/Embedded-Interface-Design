@@ -236,6 +236,38 @@ eid_project2.html: This file contains the code that spawns the html page for pro
                 
               }
               
+              else if(sentMsg == "getHumGraph")
+              {
+              	console.log("Graph")
+              	humList = $.parseJSON(evt.data);
+              	var chart = new CanvasJS.Chart("chartContainer", {
+				    animationEnabled: true,
+					theme: "light2",
+					title:{
+						text: "Humidity from tornado <-> MySQL"
+						},
+					axisY:{
+						includeZero: false
+						},
+					data: [{        
+						type: "line",       
+						dataPoints: [
+							{ y: humList[0]},
+							{ y: humList[1]},
+							{ y: humList[2] },
+							{ y: humList[3]},
+							{ y: humList[4]},
+							{ y: humList[5]},
+							{ y: humList[6]},
+							{ y: humList[7]},
+							{ y: humList[8]},
+							{ y: humList[9]}
+						]
+					}]
+				});
+				chart.render();
+              }
+
               // check if sent message is "getHumFromTornadoDatabase"
               else if(sentMsg = "getHumFromTornadoDatabase")
               {
@@ -282,36 +314,7 @@ eid_project2.html: This file contains the code that spawns the html page for pro
                 $('#humidty_table_from_tornado_time').show();
               }
 
-              else if(sentMsg == "getHumGraph")
-              {
-              	humList = $.parseJSON(evt.data);
-              	var chart = new CanvasJS.Chart("chartContainer", {
-				    animationEnabled: true,
-					theme: "light2",
-					title:{
-						text: "Simple Line Chart"
-						},
-					axisY:{
-						includeZero: false
-						},
-					data: [{        
-						type: "line",       
-						dataPoints: [
-							{ y: humList[0]},
-							{ y: humList[1]},
-							{ y: humList[2] },
-							{ y: humList[3]},
-							{ y: humList[4]},
-							{ y: humList[5]},
-							{ y: humList[6]},
-							{ y: humList[7]},
-							{ y: humList[8]},
-							{ y: humList[9]}
-						]
-					}]
-				});
-				chart.render();
-              }
+
             }
             
             // connection is not established; alert the user
@@ -412,13 +415,15 @@ eid_project2.html: This file contains the code that spawns the html page for pro
     <button id="button3" value="button3" style="background-color:green">Get humidity from tornado database</button>
     <button id="button4" value="button4" style="background-color:yellow">Get humidity from node database</button>
     <button id="button5" value="button5" style="background-color:orange">Get humidity graph</button>
+
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
     
     <div id="connection_details">
-      <input type="text" id="host_tornado" value="10.0.0.223" style="display: none;"/><br />
+      <input type="text" id="host_tornado" value="192.168.43.234" style="display: none;"/><br />
       <input type="text" id="port_tornado" value="8888" style="display: none;"/><br />
       <input type="text" id="uri_tornado" value="/ws" style="display: none;"/><br />
-      <input type="text" id="host_nodejs" value="10.0.0.223" style="display: none;"/><br />
-      <input type="text" id="port_nodejs" value="8888" style="display: none;"/><br />
+      <input type="text" id="host_nodejs" value="192.168.43.234" style="display: none;"/><br />
+      <input type="text" id="port_nodejs" value="9898" style="display: none;"/><br />
     </div>
 
     <div id="tornado_details">
@@ -477,6 +482,7 @@ eid_project2.html: This file contains the code that spawns the html page for pro
     </tr>
   </table>
 
+  <br />
   <div id="chartContainer" style="height: 300px; width: 100%;"></div>
 
 </body>
