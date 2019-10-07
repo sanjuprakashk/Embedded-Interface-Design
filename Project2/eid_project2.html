@@ -1,8 +1,24 @@
 <!doctype html>
+<!--
+eid_project2.html: This file contains the code that spawns the html page for project 2
+
+@authors: Sanju Prakash Kannioth, Srinath Shanmuganadhan
+
+@date: 10/7/2019
+
+@references: https://stackoverflow.com/questions/46680654/how-to-read-a-python-dictionary-from-the-jquery
+             https://stackoverflow.com/questions/43248211/parse-json-data-with-jquery
+              https://os.mbed.com/cookbook/Websockets-Server
+              http://www.tornadoweb.org/en/stable/
+              https://wiki.python.org/moin/WebServers
+              https://www.w3schools.com
+-->
+
 <html>
 <head>
   <title>EID Project 2</title>
   <meta charset="utf-8" />
+  <!-- CSS for the project -->
   <style type="text/css">
     body {
       text-align: center;
@@ -14,6 +30,7 @@
       font-weight: bold;
       }
   </style>
+  <!-- script section of the project -->
   <script src="http://code.jquery.com/jquery.min.js"></script>
   <script>
    
@@ -22,7 +39,9 @@
         console.log(data);
       };
       
+      // callback called when page is ready
       $(document).ready(function () {
+      	// hide all unnecessary divs on startup
         $("div#tornado_details").hide();
         $("#humidty_table_from_tornado_time").hide();
         $("#humidty_table_from_tornado").hide();
@@ -30,53 +49,68 @@
         $("#humidty_table_from_node").hide();
         $("#humidty_table_from_node_time").hide();
         
-        var ws;
-        var ws_js;
+        var ws; // web socket object for tornado connection
+        var ws_js; // web socket object for node js connection
         
-        var host = $("#host").val();
-        var port = $("#port").val();
-        var uri = $("#uri").val();
+        var host_tornado = $("#host_tornado").val();
+        var port_tornado = $("#port_tornado").val();
+        var uri_tornado = $("#uri_tornado").val();
+
+        var host_nodejs = $("#host_nodejs").val();
+        var port_nodejs = $("#port_nodejs").val();
+
+        // variable for storing temperature and humidity data received from
+        // tornado and node js
         var temperatureTornado;
         var humidityTornado;
         var temperatureNode;
         var humidityNode;
-        var sentMsg;
         
-        var sentMsgNode;
-        
-        var tornadoDbStartTime;
-        var tornadoDbEndTime;
-        
-        var nodeDbStartTime;
-        var nodeDbEndTime;
 
-        var nodeConnected = 0;
-        var tornadoConnected = 0;
+        var sentMsg; // variable to store the message sent to tornado
         
+        var sentMsgNode; // variable to store the message sent to node js
+        
+        var tornadoDbStartTime; // timing start for torando
+        var tornadoDbEndTime; // timing end for tornado
+        
+        var nodeDbStartTime; // timing start for node js
+        var nodeDbEndTime; // timing end for node js
+        
+        // variables for error checking
+        var nodeConnected = 0; // variable to check if node js web socket connection is established 
+        var tornadoConnected = 0; // variable to check if tonado web socket connection is established
+        
+        // Try to establish connection with node js web socket
         try {
-          ws_js = new WebSocket('ws://localhost:9898/');
+          ws_js = new WebSocket("ws://" + host_nodejs + ":" + port_nodejs + "/"); 
         }
         catch(error) {
           console.log(error);
         }
         
+        // call back function for when node js socket is opened
         ws_js.onopen = function(evt) { 
             log("***Node js Connection Opened***");
             nodeConnected = 1;
           };
 
+        // call back function for when node js socket is closed
         ws_js.onclose = function(evt) {
             log("***node js connection closed***");  
             nodeConnected = 0;          
         };
         
-        
+        // call back function for when node js socket hits an error
         ws_js.onerror = function(evt) {
             console.log("Node js connection failed at startup");
           }
 
+        // call back function for when node js socket receives a message
         ws_js.onmessage = function(evt) {
+          // check if conenction is established
           if(nodeConnected == 1) {
+          	// check if message sent is "getReadings"
             if(sentMsgNode == "getReadings")
             {
               $("div#nodejs_details").show();
@@ -97,12 +131,14 @@
               document.getElementById("humidityNode").value = readings.hum
             }
             
+            // check if message sent is "getHumFromNodeDatabase"
             else if(sentMsgNode = "getHumFromNodeDatabase")
             {
               humList = $.parseJSON(evt.data);
               nodeDbEndTime = new Date();
               $("#humidty_table_from_node tbody tr:not(:first-child)").remove();
               $("#humidty_table_from_node_time tbody tr:not(:first-child)").remove();
+              	// logic to populate table data in html
                 for(key in humList)
                 {
                   new_row = "<tr>";
@@ -127,6 +163,7 @@
                 console.log("Total time = ");
                 console.log(nodeDbEndTime - nodeDbStartTime);
                 
+                // logic to populate timing information in a html table
                 new_row = "<tr>";
                 new_row += "<td>";
                 new_row += nodeDbStartTime;
@@ -144,33 +181,39 @@
               }             
             }
 
+            // connection is not established; alert the user
             else {
               console.log("Connection to node js not established")
               alert("Connection to node js not established")
             }
           };
           
-          ws = new WebSocket("ws://" + host + ":" + port + uri);
+          // try to open web socket connection with the tornado server
+          ws = new WebSocket("ws://" + host_tornado + ":" + port_tornado + uri_tornado);
 
           
-          // Open Websocket callback
+          // call back function for when tornado socket is opened
           ws.onopen = function(evt) { 
             log("***Tornado Connection Opened***");
             tornadoConnected = 1;
           };
 
+          // call back function for when tornado socket is closed
           ws.onclose = function(evt) {
             log("***Tornado connection closed***");   
             tornadoConnected = 0;         
           };
           
+          // call back function for when tornado socket hits an wrror
           ws.onerror = function(evt) {
             console.log("Tornado connection failed at startup");
           }
           
-
+          // call back function for when message is received from the tornado server
           ws.onmessage = function(evt) {
+          	// check if tornado server connection is established
             if(tornadoConnected == 1) {
+              // check if sent message is "getReadings"
               if(sentMsg == "getReadings")
               {
                 console.log(evt.data)
@@ -192,12 +235,14 @@
                 
               }
               
+              // check if sent message is "getHumFromTornadoDatabase"
               else if(sentMsg = "getHumFromTornadoDatabase")
               {
                 humList = $.parseJSON(evt.data);
                 tornadoDbEndTime = new Date();
                 $("#humidty_table_from_tornado tbody tr:not(:first-child)").remove();
                 $("#humidty_table_from_tornado_time tbody tr:not(:first-child)").remove();
+                // Logic to populate table in html
                 for(key in humList)
                 {
                   new_row = "<tr>";
@@ -219,6 +264,7 @@
                 console.log("Total time = ");
                 console.log(tornadoDbEndTime - tornadoDbStartTime);
                 
+                // logic for populating timing information for tornado access
                 new_row = "<tr>";
                 new_row += "<td>";
                 new_row += tornadoDbStartTime;
@@ -235,13 +281,15 @@
                 $('#humidty_table_from_tornado_time').show();
               }
             }
-
+            
+            // connection is not established; alert the user
             else {
               console.log("Connection to tornado not established");
               alert("Connection to tornado not established");
             }             
           };
           
+        // callback function for when button 1 is pressed
         $("#button1").click(function(evt) {
           console.log("Button1");
           if(tornadoConnected == 1) {
@@ -254,6 +302,7 @@
           }
         });
         
+        // callback function for when button 2 is pressed
         $("#button2").click(function(evt) {
           console.log("Button2");
           if(nodeConnected == 1) {
@@ -266,6 +315,7 @@
           }
         });
 
+        // callback function for when button 3 is pressed
         $("#button3").click(function(evt) {
           console.log("Button3");
           if(tornadoConnected == 1) {
@@ -280,6 +330,7 @@
           }
         });
         
+        // callback function for when button 4 is pressed
         $("#button4").click(function(evt) {
           console.log("Button4");
           if(nodeConnected == 1) {
@@ -293,17 +344,13 @@
           }
         });
         
-        // Send websocket message function
-        $("#send").click(function(evt) {
-          log("Sending Message: "+$("#message").val());
-          ws.send($("#message").val());
-        });
-        
+        // callback function to switch html temperature display to celsius
         $("#celsius").click(function(evt) {
           document.getElementById("temperatureTornado").value = temperatureTornado;
           document.getElementById("temperatureNode").value = temperatureNode;
         });
         
+        // callback function to switch html temperature display to fahrenheit
         $("#fahren").click(function(evt) {
           document.getElementById("temperatureTornado").value = (temperatureTornado * 9/5) + 32;
           document.getElementById("temperatureNode").value = (temperatureNode * 9/5) + 32;
@@ -315,15 +362,18 @@
   
   <body>
     <h1>Temperature Humidity Meter</h1>
+    <!-- buttons for project 2 functionality -->
     <button id="button1" value="button1" style="background-color:red">Get readings from tornado</button>
     <button id="button2" value="button2" style="background-color:blue">Get readings from node js</button>
     <button id="button3" value="button3" style="background-color:green">Get humidity from tornado database</button>
     <button id="button4" value="button4" style="background-color:yellow">Get humidity from node database</button>
     
     <div id="connection_details">
-      <input type="text" id="host" value="10.0.0.223" style="display: none;"/><br />
-      <input type="text" id="port" value="8888" style="display: none;"/><br />
-      <input type="text" id="uri" value="/ws" style="display: none;"/><br />
+      <input type="text" id="host_tornado" value="10.0.0.223" style="display: none;"/><br />
+      <input type="text" id="port_tornado" value="8888" style="display: none;"/><br />
+      <input type="text" id="uri_tornado" value="/ws" style="display: none;"/><br />
+      <input type="text" id="host_nodejs" value="10.0.0.223" style="display: none;"/><br />
+      <input type="text" id="port_nodejs" value="8888" style="display: none;"/><br />
     </div>
 
     <div id="tornado_details">
