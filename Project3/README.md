@@ -1,4 +1,4 @@
-# EID Project 1
+# EID Project 3
 
 ## Developers
 Srinath Shanmuganadhan  
@@ -21,7 +21,7 @@ pip3 install Adafruit_DHT
 
 ### my_sql and Mariadb
 sudo apt-get install mariadb-server-10.0  
-sudo apt-get install python3-mysql.connector  
+sudo apt-get install python3-mysql.connector
 
 sudo mysql -u root -p -h localhost  
 	*enter password*  
@@ -36,41 +36,32 @@ sudo service mysql restart
 ### Sensor Connection
 Connect DHT22 sensor voltage pin to pin 1 on the RPI  
 Connect DHT22 sensor gnd pin to pin 6 on the RPI  
-Connect DHT22 sensor data pin to pin 7 on the RPI  
+Connect DHT22 sensor data pin to pin 7 on the RPI 
+
+### Install AWS IoT Python SDK
+git clone https://github.com/aws/aws-iot-device-sdk-python
+cd aws-iot-device-sdk-python
+sudo python setup.py install
 
 ## Instruction to run program
-From this directory do - python3 eid_project1.py  
+From this directory do - python3 eid_project3.py  
 
 ## Project Work
 
 ### Srinath Shanmuganadhan:
-Worked with the SQL setup and all work related to DB
-
 ### Work
-Creation of DB, adding user and granting user privilges to the DB  
-Adding the humidity and temperature values into the DB   
-Extracting the last 10 entries from the db for humidity and temperature  
+Worked with MQTT and AWS elements Iot Core, SNS,Lamda
 
 
 ### Sanju Prakash Kannioth
-Worked on pyqt design and sensor interfacing  
-
 ### Work
-Created GUI using qt designer  
-Interfaced DHT22 sensor  
-Integrated PyQt ui with sensor  
+Worked with AWS elements lambda, SQS and HTML Client
 
 ## Project Additions  
-Clicking the change units button will change the temperature from Celcius to Farenheit 
-and vice-versa
+Clicking button retrieves number of elements in the SQS Queue
+
+## Project Issues
+SQS reference material for HTML Client was extremely hard to find
 
 ## References
-https://github.com/adafruit/Adafruit_Python_DHT/blob/master/examples/AdafruitDHT.py  
-https://pythonprogramminglanguage.com/pyqtgraph-plot/  
-https://stackoverflow.com/  
-https://askubuntu.com/questions/1014947/mysql-connector-python-importerror-no-module-named-mysql  
-https://www.programcreek.com/python/example/99607/PyQt5.QtCore.QTimer  
-https://www.youtube.com/watch?v=lCfSKtPADYw  
-https://www.mssqltips.com  
-https://www.w3schools.com
 
