@@ -64,4 +64,15 @@ Clicking button retrieves number of elements in the SQS Queue
 SQS reference material for HTML Client was extremely hard to find
 
 ## References
+https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/getting-started-browser.html
+https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
+https://stackoverflow.com/questions/55934468/get-all-messages-from-aws-sqs-in-nodejs
+https://www.w3schools.com/jsref/met_table_deleterow.asp
+https://www.w3schools.com/tags/att_table_align.asp
+https://docs.aws.amazon.com/iot/latest/developerguide/iot-gs.html
+https://techblog.calvinboey.com/raspberrypi-aws-iot-python/
+https://docs.aws.amazon.com/lambda/latest/dg/with-sns-example.html
+https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-making-api-requests.html
+https://startupnextdoor.com/adding-to-sqs-queue-using-aws-lambda-and-a-serverless-api-endpoint/
+
 
