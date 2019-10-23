@@ -1,0 +1,244 @@
+<!doctype html>
+<!--
+eid_project3.html: This file contains the code that spawns the html page for project 3
+@developer: Sanju Prakash Kannioth
+@date: 10/22/2019
+@references: https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/getting-started-browser.html
+             https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
+             https://stackoverflow.com/questions/55934468/get-all-messages-from-aws-sqs-in-nodejs
+             https://www.w3schools.com/jsref/met_table_deleterow.asp
+             https://www.w3schools.com/tags/att_table_align.asp
+-->
+<html>
+<head>
+  <title>EID Project 3</title>
+  <meta charset="utf-8" />
+  <style type="text/css">
+    body {
+      text-align: center;
+      min-width: 500px;
+    }
+    caption {
+      display: table-caption;
+      text-align: center;
+      font-weight: bold;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+  </style>
+
+<script src="http://code.jquery.com/jquery.min.js"></script>
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.553.0.min.js"></script>
+<script>
+  // Initialize the Amazon Cognito credentials provider
+  AWS.config.region = 'us-east-1'; // Region
+  AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+     IdentityPoolId: 'us-east-1:7ab593cd-6d47-4564-81c5-a9682dde5219',
+  });
+
+  var queueURL = "https://sqs.us-east-1.amazonaws.com/987678846235/EID_Project3_SQS";
+  var queue = new AWS.SQS({params: {QueueUrl: queueURL}}); 
+
+  // array to store the temperature celsius values
+  var tempVal = [];
+
+  // function to append table rows and modify values if required
+  function tableUpdate(timestamp, temp, hum) {
+    var table = document.getElementById("dataTable");
+
+    var row = table.insertRow(table.lenght);
+    var cell1 = row.insertCell(0);
+    var cell2 = row.insertCell(1);
+    var cell3 = row.insertCell(2);
+    cell1.innerHTML = timestamp;
+    cell2.innerHTML = temp;
+    cell3.innerHTML = hum;
+
+    var x = document.getElementById("dataTable").rows.length; 
+    if(x >= 20) {
+      tableRowDelete();
+    }
+
+    for (var i = 0; i < document.getElementById("dataTable").rows.length; i++) {
+      var rowVal = document.getElementById("dataTable").rows[parseInt(i,10)].cells;
+      tempVal[i] = parseFloat(rowVal[1].innerHTML);
+    }
+  }
+
+  // function to delete first row in table
+  function tableRowDelete() {
+    document.getElementById("dataTable").deleteRow(1);
+  }
+
+  // params for retrieving all SQS messages 
+  var params = {
+   MaxNumberOfMessages: 10,
+   VisibilityTimeout: 60,
+   MessageAttributeNames: [
+   "All"
+   ],
+   QueueUrl: queueURL,
+   WaitTimeSeconds: 5
+  };
+
+  // function to retrieve all SQS messages
+  var receiveMessage = function() {
+    queue.receiveMessage(params, function(err, data) {
+      if(!data.Messages || data.Messages.length === 0){
+        getSQSLength();
+        return;
+
+        // no messages are available. return
+      } 
+      else if (data.Messages) {
+        for (var i = 0; i < data.Messages.length; i++) {
+          var message = data.Messages[i];
+          var body = message.Body;
+          // parse incoming message as JSON
+          var temp_data = JSON.parse(body);
+          console.log(temp_data);
+          tableUpdate(temp_data.Timestamp, temp_data.Temperature, temp_data.Humidity);
+          // remove received element from queue
+          removeFromQueue(message);
+          }
+          // recursively call function until queue is empty
+          receiveMessage();
+      }
+    });
+  };
+
+  // function to remove read elements from queue
+  var removeFromQueue = function(message) {
+    queue.deleteMessage({
+      QueueUrl : queueURL,
+      ReceiptHandle : message.ReceiptHandle
+    }, function(err, data) {
+      err && console.log(err);
+    });
+  };
+
+  var params_sqs_length = {
+   QueueUrl: queueURL,
+   AttributeNames: [
+   "ApproximateNumberOfMessages"
+   ]
+  };
+
+  var getSQSLength = function() {
+    queue.getQueueAttributes(params_sqs_length, function(err, data) {
+    if (err) console.log(err, err.stack); // an error occurred
+    else {
+    console.log(data.Attributes.ApproximateNumberOfMessages);           // successful response
+    document.getElementById("sqsLength").value = data.Attributes.ApproximateNumberOfMessages;
+  }
+  });
+  }
+
+  // parameters for reading single element from queue
+  var params_single_record = {
+   MaxNumberOfMessages: 1,
+   MessageAttributeNames: [
+   "All"
+   ],
+   QueueUrl: queueURL,
+   WaitTimeSeconds: 10
+  };
+
+  // function to receive single message from queue
+  var receiveSingleMessage = function() {
+    queue.receiveMessage(params_single_record, function(err, data) {
+      if(!data.Messages || data.Messages.length === 0){
+        getSQSLength();
+        return;
+      }
+      else if (data.Messages) {
+        var message = data.Messages[0];
+        var body = message.Body;
+              // execute logic
+        var temp_data = JSON.parse(body);
+        console.log(temp_data);
+        tableUpdate(temp_data.Timestamp, temp_data.Temperature, temp_data.Humidity);
+        removeFromQueue(message);
+      }
+     getSQSLength();
+     });
+  };
+
+  // function to display table temperature entries in Celsius
+  var celsiusTemperatureContent = function() {
+    for (var i = 1; i < document.getElementById("dataTable").rows.length; i++) {
+      var temperatureVal = document.getElementById("dataTable").rows[parseInt(i,10)].cells;
+      temperatureVal[1].innerHTML = tempVal[i];
+    }
+  }
+
+  // function to display table temperature entries in fahrenheit
+  var fahrenTemperatureContent = function() {
+    for (var i = 1; i < document.getElementById("dataTable").rows.length; i++) {
+      var temperatureVal = document.getElementById("dataTable").rows[parseInt(i,10)].cells;
+      var temp = (tempVal[i] * 9/5) + 32;
+      console.log(temp);
+      temperatureVal[1].innerHTML = temp;
+    }
+  }
+
+  $(document).ready(function () {
+    // called if button 1 is clicked
+    $("#button1").click(function(evt) {
+      console.log("Button1");
+      receiveSingleMessage();
+    });
+
+    // called if button 2 is clicked
+    $("#button2").click(function(evt) {
+      console.log("Button2");
+      receiveMessage();
+    });
+
+    // called if button 3 is clicked
+    $("#button3").click(function(evt) {
+      getSQSLength();
+    });
+    
+    // called if celsius radio button is clicked
+    $("#celsius").click(function(evt) {
+        celsiusTemperatureContent();    
+      });
+
+    // called if fahren radio button is clicked
+    $("#fahren").click(function(evt) {
+        fahrenTemperatureContent();
+      });
+
+  });
+
+
+</script>
+</head>
+
+<body>
+  <h1>HTML Client <-> AWS SQS</h1>
+  <button id="button1" value="button1" style="background-color:red">Get single SQS record</button>
+  <button id="button2" value="button2" style="background-color:blue">Get all SQS records</button>
+  <button id="button3" value="button3" style="background-color:green">Get SQS length</button>
+  <input type="text" id="sqsLength" value=""/><br />
+
+  <br />
+  <input type="radio" name="unit" id="celsius" value="celsius" checked> C
+  <input type="radio" name="unit" id="fahren" value="fahren"> F <br />
+  <br />  
+  <div>
+    <table id="dataTable" align="center">
+      <tr>
+        <th>Timestamp</th>
+        <th>Temperature</th>
+        <th>Humidity</th>
+      </tr>
+    </table>
+    <br>
+  </div>
+
+</body>
+</html>
+
