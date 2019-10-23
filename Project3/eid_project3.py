@@ -172,6 +172,9 @@ class eid_project1(QtWidgets.QDialog):
 		'''
 		self.ui.tempDisplayLine.setText("Error")
 		self.ui.humDisplayLine.setText("Error")
+		payload = '{ "id":"alert", "Timestamp": "'+ (str(self.timeStamp)) + '", "Temperature": "Error", "Humidity": "Error" }'
+		print (payload)
+		self.myMQTTClient.publish("sensorstate",payload, 0)
 
 	
 	def getImmediateVal(self):
