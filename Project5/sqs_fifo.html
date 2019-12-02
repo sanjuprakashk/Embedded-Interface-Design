@@ -1,0 +1,107 @@
+<html>
+<head>
+  <title>EID Project 3</title>
+  <meta charset="utf-8" />
+  <style type="text/css">
+    body {
+      text-align: center;
+      min-width: 500px;
+    }
+    caption {
+      display: table-caption;
+      text-align: center;
+      font-weight: bold;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+  </style>
+
+<script src="http://code.jquery.com/jquery.min.js"></script>
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.553.0.min.js"></script>
+<script>
+  // Initialize the Amazon Cognito credentials provider
+  AWS.config.region = 'us-east-1'; // Region
+  AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+     IdentityPoolId: 'us-east-1:e379f014-d051-4e72-b389-1d9a6c7bc351',
+  });
+  var queueURL = "https://sqs.us-east-1.amazonaws.com/837538385441/magic_wand.fifo";
+  var queue = new AWS.SQS({params: {QueueUrl: queueURL}});
+
+
+  // function to remove read elements from queue
+  var removeFromQueue = function(message) {
+    queue.deleteMessage({
+      QueueUrl : queueURL,
+      ReceiptHandle : message.ReceiptHandle
+    }, function(err, data) {
+      err && console.log(err);
+    });
+  };
+
+  // parameters for reading single element from queue
+  var params_single_record = {
+   MaxNumberOfMessages: 10,
+   MessageAttributeNames: [
+   "All"
+   ],
+   QueueUrl: queueURL,
+   WaitTimeSeconds: 10
+  };
+
+   // function to receive single message from queue
+  var receiveSingleMessage = function() {
+    queue.receiveMessage(params_single_record, function(err, data) {
+      if(!data.Messages || data.Messages.length === 0){
+        getSQSLength();
+        return;
+      }
+      else if (data.Messages) {
+
+        for (var i = 0; i < data.Messages.length; i++) {
+        var message = data.Messages[i];
+        // var body = message.Body;
+              // execute logic
+        // var temp_data = JSON.parse(body);
+        console.log(message);
+        // tableUpdate(temp_data.Timestamp, temp_data.Temperature, temp_data.Humidity);
+        removeFromQueue(data.Messages[i]);
+      }
+     }
+     getSQSLength();
+     });
+  };
+
+  var params_sqs_length = {
+   QueueUrl: queueURL,
+   AttributeNames: [
+   "ApproximateNumberOfMessages","ApproximateNumberOfMessagesNotVisible"
+   ]
+  };
+  var getSQSLength = function() {
+    queue.getQueueAttributes(params_sqs_length, function(err, data) {
+    if (err) console.log(err, err.stack); // an error occurred
+    else {
+    console.log(data.Attributes.ApproximateNumberOfMessagesNotVisible);           // successful response
+    // document.getElementById("sqsLength").value = data.Attributes.ApproximateNumberOfMessages;
+  }
+  });
+  }
+
+  $(document).ready(function () {
+    // called if button 1 is clicked
+    $("#button1").click(function(evt) {
+      console.log("Button1");
+      receiveSingleMessage();
+    });
+
+  });
+
+  </script>
+</head>
+
+<body>
+  <h1>HTML Client <-> AWS SQS</h1>
+  <button id="button1" value="button1" style="background-color:red">Get single SQS record</button>
+  </body>
+</html>
