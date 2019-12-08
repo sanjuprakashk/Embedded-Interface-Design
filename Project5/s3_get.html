@@ -1,0 +1,45 @@
+<html>
+<head>
+  <title>EID Project 3</title>
+  <meta charset="utf-8" />
+  <style type="text/css">
+    body {
+      text-align: center;
+      min-width: 500px;
+    }
+    caption {
+      display: table-caption;
+      text-align: center;
+      font-weight: bold;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+  </style>
+
+<script src="http://code.jquery.com/jquery.min.js"></script>
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.553.0.min.js"></script>
+<script>
+  AWS.config.region = 'us-east-1'; // Region
+  AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+     IdentityPoolId: 'us-east-1:e379f014-d051-4e72-b389-1d9a6c7bc351',
+  });
+
+  var s3 = new AWS.S3();
+  var params = {
+    Bucket: "test-bucket-eid-123",
+    Key: "2.jpg"
+  };
+  s3.getObject(
+    params,
+    function (error, data) {
+      if (error) {
+        alert("Failed to retrieve an object: " + error);
+      } else {
+        alert("Loaded " + data.ContentLength + " bytes");
+        // do something with data.Body
+      }
+    }
+  );
+  </script>
+</head>
