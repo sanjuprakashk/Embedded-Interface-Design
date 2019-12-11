@@ -28,8 +28,8 @@ class magic_wand_server(QtWidgets.QDialog):
 		
 		self.latestLabel = ' '
 		
-		self.total_messages = 1
-		self.totalImages = 1
+		self.total_messages = 0
+		self.totalImages = 0
 		
 		self.ui.getImageButton.clicked.connect(self.getImage)
 		self.ui.getPercentButton.clicked.connect(self.getPercentData)
@@ -88,17 +88,22 @@ class magic_wand_server(QtWidgets.QDialog):
 			except:
 				doneFlag = 1
 				print("erorr")
-			
-		self.percentVoiceCorrect = (float(voice_command_correct / self.total_messages) * 100)
-		self.percentVoiceWrong = 100 - self.percentVoiceCorrect
-		self.ui.lcdPercentCorrectVoice.display(self.percentVoiceCorrect)
-		self.ui.lcdPercentWrongVoice.display(self.percentVoiceWrong)
+		if(self.total_messages == 0):
+			pass
+		else:
+			self.percentVoiceCorrect = (float(voice_command_correct / self.total_messages) * 100)
+			self.percentVoiceWrong = 100 - self.percentVoiceCorrect
+			self.ui.lcdPercentCorrectVoice.display(self.percentVoiceCorrect)
+			self.ui.lcdPercentWrongVoice.display(self.percentVoiceWrong)
 		
-		self.percentImagesCorrect = (float(image_command_correct / self.totalImages) * 100)
-		self.percentImagesWrong = 100 - self.percentImagesCorrect
+		if(self.totalImages == 0):
+			pass
+		else:
+			self.percentImagesCorrect = (float(image_command_correct / self.totalImages) * 100)
+			self.percentImagesWrong = 100 - self.percentImagesCorrect
 		
-		self.ui.lcdPercentCorrectImages.display(self.percentImagesCorrect)
-		self.ui.lcdPercentWrongImages.display(self.percentImagesWrong)
+			self.ui.lcdPercentCorrectImages.display(self.percentImagesCorrect)
+			self.ui.lcdPercentWrongImages.display(self.percentImagesWrong)
 				
 		self.ui.imageLabel.setText(str(self.latestLabel))
 		
