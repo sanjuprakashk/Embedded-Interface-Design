@@ -42,9 +42,10 @@ sudo service mysql restart
 ### node js
 	npm install websocket
 
-	
 ## Instruction to run program
- 
+	node web_socket_server.js
+	magic_wand_client.py
+	magic_wand_server.py
 
 ## Project Work
 
@@ -52,16 +53,24 @@ sudo service mysql restart
 ### Work 
 	AWS lex, Audio, database, Node.js
 
-
-
 ### Sanju Prakash Kannioth
 ### Work
 	AWS poly, SQS, Camera, pyQt, HTML client
+	
+## Problems faces
+	Setting up of microphone
+	Understanding usage of AWS API
 
 ## References
+https://boto3.amazonaws.com/v1/documentation/api/latest/guide/sqs.html#sqs
+https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-examples.html
+https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/lex-runtime.html
+https://www.geeksforgeeks.org/random-numbers-in-python/
+https://stackoverflow.com/questions/27276135/python-random-system-time-seed
 https://www.youtube.com/watch?v=Gy0C9g16DW0&feature=youtu.be
 https://classes.engineering.wustl.edu/ese205/core/index.php?title=Audio_Input_and_Output_from_USB_Microphone_%2B_Raspberry_Pi
 https://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostContent.html
 https://metacpan.org/pod/Paws::LexRuntime::PostContent
+https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 
 

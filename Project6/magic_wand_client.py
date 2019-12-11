@@ -171,7 +171,7 @@ while(True):
     if  button_state == True:
         button_callback()
         while GPIO.input(button) == True:
-            time.sleep(0.2)
+            time.sleep(1)
 
 
 GPIO.cleanup() # Clean up
