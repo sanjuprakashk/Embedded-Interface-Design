@@ -169,7 +169,7 @@ GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 while(True):
     button_state = GPIO.input(button)
     if  button_state == True:
-        button_callback(1)
+        button_callback()
         while GPIO.input(button) == True:
             time.sleep(0.2)
 
