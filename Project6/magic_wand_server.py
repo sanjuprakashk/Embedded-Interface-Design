@@ -1,3 +1,13 @@
+#!/usr/bin/python3 
+
+'''
+magic_wand_server.py: This file contains the code that does all the server services
+
+@developers: Sanju Prakash Kannioth, Srinath Shanmuganadhan
+@date: 12/11/2019
+@references: https://www.youtube.com/watch?v=D0iCHFXHb_g
+			 EID Projects 1,2,3
+''' 
 from PyQt5 import QtWidgets, QtGui, QtCore
 from server_ui import Ui_Dialog
 import sys
@@ -14,19 +24,22 @@ class magic_wand_server(QtWidgets.QDialog):
 		self.ui = Ui_Dialog()
 		self.ui.setupUi(self)
 		
+		# Variables to store percentage data for images
 		self.percentImagesCorrect = 0
 		self.percentImagesWrong = 0
 		
+		# Variables to store percentage data for voice commands
 		self.percentVoiceCorrect = 0
 		self.percentVoiceWrong = 0
 		
+
 		self.numImagesCorrect = 0
-		
 		self.numVoiceCorrect = 0
 		self.numVoiceWrong = 0
 		
 		self.counter = 1;
 		
+		# Variables to store latest label obtained
 		self.latestLabel = 'default'
 		
 		self.total_messages = 0
@@ -40,6 +53,11 @@ class magic_wand_server(QtWidgets.QDialog):
 		self.create_table()
 		
 	def getPercentData(self):
+		''' 
+		function that updates percentage data for images and voice commands
+		'''
+
+		# valid voice commands
 		valid_voice_commands = ['Identifio', 'Wrongo', 'Correcto']
 		invalid_voice_commands = 'Invalid'
 		
@@ -51,6 +69,7 @@ class magic_wand_server(QtWidgets.QDialog):
 		
 		doneFlag = 0
 		
+		# loop over all available entries in the SQS queue
 		while(doneFlag == 0):
 			try:
 				msgs = sqs_client.receive_message(QueueUrl=sqs_queue_url,
@@ -62,6 +81,7 @@ class magic_wand_server(QtWidgets.QDialog):
 				msgs = msgs['Messages']
 				voice_command_correct = self.numVoiceCorrect
 				image_command_correct = self.numImagesCorrect
+				# loop over each message received and extract the body of the response
 				for i in msgs:
 					self.total_messages = self.total_messages + 1
 					incoming_message = json.loads(msgs[index]['Body'])
@@ -102,6 +122,7 @@ class magic_wand_server(QtWidgets.QDialog):
 			except:
 				doneFlag = 1
 
+		# update GUI with percentage data
 		if(self.total_messages == 0):
 			pass
 		else:
@@ -124,6 +145,10 @@ class magic_wand_server(QtWidgets.QDialog):
 		doneFlag = 0
 		
 	def getImage(self):
+		''' 
+		function that gets latest image from s3 bucket and displays it on GUI
+		'''
+
 		try:
 			s3 = boto3.resource('s3', region_name='us-east-1')
 			bucket_name = "test-bucket-eid-123"
@@ -135,6 +160,10 @@ class magic_wand_server(QtWidgets.QDialog):
 			pass
 		
 	def create_table(self):
+		''' 
+		function that creates mysql db if it does not exist
+		'''
+
 		magicwand_table_exist = "SHOW TABLES LIKE 'MAGICWAND1'"
 		self.cursor.execute(magicwand_table_exist)
 		result_magicwand = self.cursor.fetchone()
@@ -145,6 +174,9 @@ class magic_wand_server(QtWidgets.QDialog):
 			self.cursor.execute("CREATE TABLE MAGICWAND1(id INT NOT NULL AUTO_INCREMENT, Label VARCHAR(20) NOT NULL, Image_correct VARCHAR(20) NOT NULL, Image_wrong VARCHAR(20) NOT NULL, Voice_correct VARCHAR(20) NOT NULL, Voice_wrong VARCHAR(20) NOT NULL, PRIMARY KEY (id));")
 	
 	def put_data(self, label, img_correct, img_wrong,voice_correct, voice_wrong):
+		''' 
+		function to data into mysql db
+		'''
 		self.cursor.execute("INSERT INTO MAGICWAND1 (Label, Image_correct, Image_wrong, Voice_correct, Voice_wrong) VALUES (%s, %s, %s, %s, %s)", (label, img_correct, img_wrong, voice_correct, voice_wrong))
 		print("Record inserted successfully into MAGICWAND able")
 		self.mariadb_connection.commit()
