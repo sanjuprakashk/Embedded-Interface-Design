@@ -57,7 +57,7 @@ sudo service mysql restart
 ### Work
 	AWS poly, SQS, Camera, pyQt, HTML client
 	
-## Problems faces
+## Problems faced
 	Setting up of microphone
 	Understanding usage of AWS API
 
