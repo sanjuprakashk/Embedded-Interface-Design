@@ -1,20 +1,38 @@
 #!/usr/bin/python3 
+
+'''
+magic_wand_client.py: This file contains the code that does all the client services
+
+@developers: Sanju Prakash Kannioth, Srinath Shanmuganadhan
+@date: 12/11/2019
+@references: https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
+             https://boto3.amazonaws.com/v1/documentation/api/latest/guide/sqs.html#sqs
+             https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-examples.html
+             https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/lex-runtime.html
+             https://www.geeksforgeeks.org/random-numbers-in-python/
+             https://stackoverflow.com/questions/27276135/python-random-system-time-seed
+''' 
+
 import pyaudio
 import wave
 import os
 import boto3
-import RPi.GPIO as GPIO # Import Raspberry Pi GPIO library
+import RPi.GPIO as GPIO
 from time import sleep
 import picamera
 import json
 import random
 
-latestLabel = ' '
+latestLabel = 'default'
+# Instatiate the camera
 camera = picamera.PiCamera()
 debounceVar = 0
 
-def button_callback(channel):
-    #GPIO.remove_event_detect(17)
+''' 
+function that contains all client functionalties
+'''
+
+def button_callback():
     global latestLabel
     global camera
     global debounceVar
@@ -27,11 +45,13 @@ def button_callback(channel):
     #setup audio input stream
     #sleep (1)
     
+    # Turn on microphone and read for 3 secs
     os.system('arecord -D plughw:1,0 -d 3 -r 16000 -f S16_LE -t wav test1.wav &&  aplay test1.wav')
 
-    #CONVERTING SPEECH TO TEXT USING AMAZON LEX
+    #converting speech to text on amazon lex
     obj = wave.open(os.getcwd()+'/test1.wav','rb')
     
+    # client object for lex
     lex_client = boto3.client('lex-runtime', region_name="us-east-1")
     response_lex = lex_client.post_content(
         botName='MagicWand',
@@ -42,6 +62,7 @@ def button_callback(channel):
         inputStream=obj.readframes(96044)
     )
     
+
     response = response_lex['message']
     if response == "Sorry, can you please repeat that?":
         response = 'Invalid'
@@ -50,9 +71,9 @@ def button_callback(channel):
     
     if response == 'Identifio':
         camera.capture('test_img.jpg')
+        
+        # client object for rekognition client
         aws_client = boto3.client("rekognition",
-                          # aws_access_key_id =access_key_id,
-                          # aws_secret_access_key = secret_access_key,
                           region_name='us-east-1')
         photo = "test_img.jpg"
 
@@ -64,10 +85,9 @@ def button_callback(channel):
 
         print(response['Labels'])
 
-        polly_client = boto3.Session(
-            #             aws_access_key_id=,                     
-            # aws_secret_access_key=,
-            region_name='us-east-1').client('polly')
+
+        # client object for aws polly client
+        polly_client = boto3.Session(region_name='us-east-1').client('polly')
 
         response_polly = polly_client.synthesize_speech(VoiceId='Joanna',
                         OutputFormat='mp3', 
@@ -79,6 +99,7 @@ def button_callback(channel):
         
         latestLabel = response['Labels'][0]['Name']
 
+        # playback recorded audio
         import pygame
         pygame.mixer.init()
         pygame.mixer.music.load("speech.mp3")
@@ -88,6 +109,7 @@ def button_callback(channel):
 
             
     elif response == 'Correcto' or response == 'Wrongo':
+        # client object for sqs
         sqs_client = boto3.client('sqs', region_name='us-east-1')
 
         queueUrl = "https://sqs.us-east-1.amazonaws.com/837538385441/magic_wand.fifo"
@@ -125,19 +147,22 @@ def button_callback(channel):
             MessageDeduplicationId=str(random.random())
             )
     debounceVar = 0
-    #GPIO.add_event_detect(17,GPIO.RISING,callback=button_callback, bouncetime=200)
-button = 10
+
+
+button = 10 # GPIO pin number that attaches to the buttton
     
-GPIO.setwarnings(False) # Ignore warning for now
-GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
-GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 10 to be an input pin and set initial value to be pulled low (off)
-#GPIO.add_event_detect(button,GPIO.RISING,callback=button_callback, bouncetime=200) # Setup event on pin 10 rising edge
+# setup gpio pin as input
+GPIO.setwarnings(False) 
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+# Loop until button press, do functions, loop again
 while(True):
     button_state = GPIO.input(button)
     if  button_state == True:
         button_callback(1)
         while GPIO.input(button) == True:
             time.sleep(0.2)
-#message = input("Press enter to quit\n\n") # Run until someone presses enter
+
 
 GPIO.cleanup() # Clean up

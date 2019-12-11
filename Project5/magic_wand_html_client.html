@@ -3,13 +3,9 @@
 magic_wand_html_client.html: This file contains the code that spawns the html page for project 6
 @developer: Sanju Prakash Kannioth
 @date: 12/11/2019
-@references: https://stackoverflow.com/questions/46680654/how-to-read-a-python-dictionary-from-the-jquery
-             https://stackoverflow.com/questions/43248211/parse-json-data-with-jquery
+@references: https://stackoverflow.com/questions/43248211/parse-json-data-with-jquery
              https://os.mbed.com/cookbook/Websockets-Server
-             http://www.tornadoweb.org/en/stable/
-             https://wiki.python.org/moin/WebServers
              https://www.w3schools.com
-             https://canvasjs.com/html5-javascript-line-chart/
 -->
 
 <html>
@@ -156,18 +152,20 @@ magic_wand_html_client.html: This file contains the code that spawns the html pa
   
   <body>
     <h1>Magic Wand</h1>
-    <!-- buttons for project 2 functionality -->
+    <!-- buttons for querying db using nodejs functionality -->
     <button id="button1" value="button1" style="background-color:red">Get data from node js</button>
     
 
     <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
     
     <div id="connection_details">
-      <input type="text" id="host_nodejs" value="10.0.0.223" style="display: none;"/><br />
+      <input type="text" id="host_nodejs" value="10.0.0.175" style="display: none;"/><br />
       <input type="text" id="port_nodejs" value="9898" style="display: none;"/><br />
     </div>
   
   <br />
+
+  <!-- table to display db data -->
   <div>
     <table id="dataTable" align="center">
       <tr>
