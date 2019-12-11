@@ -1,0 +1,188 @@
+<!doctype html>
+<!--
+eid_project2.html: This file contains the code that spawns the html page for project 2
+@developer: Sanju Prakash Kannioth
+@date: 10/7/2019
+@references: https://stackoverflow.com/questions/46680654/how-to-read-a-python-dictionary-from-the-jquery
+             https://stackoverflow.com/questions/43248211/parse-json-data-with-jquery
+             https://os.mbed.com/cookbook/Websockets-Server
+             http://www.tornadoweb.org/en/stable/
+             https://wiki.python.org/moin/WebServers
+             https://www.w3schools.com
+             https://canvasjs.com/html5-javascript-line-chart/
+-->
+
+<html>
+<head>
+  <title>Magic Wand Project</title>
+  <meta charset="utf-8" />
+  <!-- CSS for the project -->
+  <style type="text/css">
+    body {
+      text-align: center;
+      min-width: 500px;
+    }
+    caption {
+      display: table-caption;
+      text-align: center;
+      font-weight: bold;
+      }
+    table, th, td {
+      border: 1px solid black;
+    }
+  </style>
+  <!-- script section of the project -->
+  <script src="http://code.jquery.com/jquery.min.js"></script>
+  <script>
+   
+      // log function
+      log = function(data){
+        console.log(data);
+      };
+      
+      // callback called when page is ready
+      $(document).ready(function () {
+        // hide all unnecessary divs on startup
+        $("div#nodejs_details").hide();
+        
+        var ws_js; // web socket object for node js connection
+        
+        var host_nodejs = $("#host_nodejs").val();
+        var port_nodejs = $("#port_nodejs").val();
+        
+        var sentMsgNode; // variable to store the message sent to node js
+        
+        // variables for error checking
+        var nodeConnected = 0; // variable to check if node js web socket connection is established 
+        
+        // Try to establish connection with node js web socket
+        try {
+          ws_js = new WebSocket("ws://" + host_nodejs + ":" + port_nodejs + "/"); 
+        }
+        catch(error) {
+          console.log(error);
+        }
+        
+        // call back function for when node js socket is opened
+        ws_js.onopen = function(evt) { 
+            log("***Node js Connection Opened***");
+            nodeConnected = 1;
+          };
+        // call back function for when node js socket is closed
+        ws_js.onclose = function(evt) {
+            log("***node js connection closed***");  
+            nodeConnected = 0;          
+        };
+        
+        // call back function for when node js socket hits an error
+        ws_js.onerror = function(evt) {
+            console.log("Node js connection failed at startup");
+          }
+        // call back function for when node js socket receives a message
+        ws_js.onmessage = function(evt) {
+          // check if conenction is established
+          if(nodeConnected == 1) {
+            // check if message sent is "getData"
+            if(sentMsgNode = "getData")
+            {
+              $("div#nodejs_details").show();
+              dataList = $.parseJSON(evt.data);
+              console.log(dataList)
+              for(index in dataList)
+              {
+                console.log(index)
+                dataList1 = dataList[index]
+                tableUpdate(dataList1['id'], dataList1['Label'], dataList1['Image_correct'], dataList1['Image_wrong'], dataList1['Voice_correct'], dataList1['Voice_wrong'])
+                console.log(dataList1[index])
+              }
+              
+            }             
+            }
+            // connection is not established; alert the user
+            else {
+              console.log("Connection to node js not established")
+              alert("Connection to node js not established")
+            }
+          };
+          
+         
+        
+        // function to append table rows and modify values if required
+        function tableUpdate(id, label, image_correct, image_wrong, voice_correct, voice_wrong) {
+          var table = document.getElementById("dataTable");
+          var row = table.insertRow(table.lenght);
+          var cell1 = row.insertCell(0);
+          var cell2 = row.insertCell(1);
+          var cell3 = row.insertCell(2);
+          var cell4 = row.insertCell(3);
+          var cell5 = row.insertCell(4);
+          var cell6 = row.insertCell(5);
+
+          cell1.innerHTML = id;
+          cell2.innerHTML = label;
+          cell3.innerHTML = image_correct;
+          cell4.innerHTML = image_wrong;
+          cell5.innerHTML = voice_correct;
+          cell6.innerHTML = voice_wrong;
+
+          var x = document.getElementById("dataTable").rows.length; 
+          if(x >= 20) {
+            tableRowDelete();
+          }
+          for (var i = 0; i < document.getElementById("dataTable").rows.length; i++) {
+            var rowVal = document.getElementById("dataTable").rows[parseInt(i,10)].cells;
+          }
+        }
+        // function to delete first row in table
+        function tableRowDelete() {
+          document.getElementById("dataTable").deleteRow(1);
+        }
+
+        
+        // callback function for when button 2 is pressed
+        $("#button1").click(function(evt) {
+          console.log("Button1");
+          if(nodeConnected == 1) {
+            sentMsgNode = "getData";
+            ws_js.send('getData');
+          }
+          else {
+            console.log("Connection node js not established");
+            alert("Connection to node js not established");
+          }
+        });
+                
+      });
+    </script>
+  </head>
+  
+  <body>
+    <h1>Magic Wand</h1>
+    <!-- buttons for project 2 functionality -->
+    <button id="button1" value="button1" style="background-color:red">Get data from node js</button>
+    
+
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+    
+    <div id="connection_details">
+      <input type="text" id="host_nodejs" value="10.0.0.223" style="display: none;"/><br />
+      <input type="text" id="port_nodejs" value="9898" style="display: none;"/><br />
+    </div>
+  
+  <br />
+  <div>
+    <table id="dataTable" align="center">
+      <tr>
+        <th>Id</th>
+        <th>Label</th>
+        <th>Image Correct</th>
+        <th>Image Wrong</th>
+        <th>Voice Correct</th>
+        <th>Voice Wrong</th>
+      </tr>
+    </table>
+    <br>
+  </div>
+
+</body>
+</html>
