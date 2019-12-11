@@ -5,22 +5,32 @@ import os
 import boto3
 import RPi.GPIO as GPIO # Import Raspberry Pi GPIO library
 from time import sleep
-import copy
 import picamera
 import json
 import random
 
 latestLabel = ' '
+camera = picamera.PiCamera()
+debounceVar = 0
 
 def button_callback(channel):
+    #GPIO.remove_event_detect(17)
     global latestLabel
+    global camera
+    global debounceVar
+    sleep(1)
+    if debounceVar == 1:
+        debounceVar = 0
+        return
+    debounceVar = 1
     print("Button was pushed!")
     #setup audio input stream
-    sleep (1)
+    #sleep (1)
+    
     os.system('arecord -D plughw:1,0 -d 3 -r 16000 -f S16_LE -t wav test1.wav &&  aplay test1.wav')
 
     #CONVERTING SPEECH TO TEXT USING AMAZON LEX
-    obj = wave.open('/home/pi/Desktop/Embedded-Interface-Design/Project5/test1.wav','rb')
+    obj = wave.open(os.getcwd()+'/test1.wav','rb')
     
     lex_client = boto3.client('lex-runtime', region_name="us-east-1")
     response_lex = lex_client.post_content(
@@ -39,8 +49,6 @@ def button_callback(channel):
     print(response)
     
     if response == 'Identifio':
-        camera = picamera.PiCamera()
-        camera.vflip = True
         camera.capture('test_img.jpg')
         aws_client = boto3.client("rekognition",
                           # aws_access_key_id =access_key_id,
@@ -77,15 +85,15 @@ def button_callback(channel):
         pygame.mixer.music.play()
         while pygame.mixer.music.get_busy() == True:
             continue
+
             
     elif response == 'Correcto' or response == 'Wrongo':
         sqs_client = boto3.client('sqs', region_name='us-east-1')
 
         queueUrl = "https://sqs.us-east-1.amazonaws.com/837538385441/magic_wand.fifo"
 
-        label = response['Labels'][0]['Name']
         sendToSqs = json.dumps([{"voiceCommand": response}, {"Label" : str(latestLabel)}])
-
+        label = latestLabel
         response_sqs = sqs_client.send_message(
             QueueUrl=queueUrl,
             MessageBody=sendToSqs,
@@ -114,15 +122,22 @@ def button_callback(channel):
             QueueUrl=queueUrl,
             MessageBody=sendToSqs,
             MessageGroupId='wand',
-            MessageDeduplicationId=str(random.random())            
-        )
-
+            MessageDeduplicationId=str(random.random())
+            )
+    debounceVar = 0
+    #GPIO.add_event_detect(17,GPIO.RISING,callback=button_callback, bouncetime=200)
+button = 10
     
-
 GPIO.setwarnings(False) # Ignore warning for now
 GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
-GPIO.setup(10, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 10 to be an input pin and set initial value to be pulled low (off)
-GPIO.add_event_detect(10,GPIO.RISING,callback=button_callback) # Setup event on pin 10 rising edge
-message = input("Press enter to quit\n\n") # Run until someone presses enter
+GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 10 to be an input pin and set initial value to be pulled low (off)
+#GPIO.add_event_detect(button,GPIO.RISING,callback=button_callback, bouncetime=200) # Setup event on pin 10 rising edge
+while(True):
+    button_state = GPIO.input(button)
+    if  button_state == True:
+        button_callback(1)
+        while GPIO.input(button) == True:
+            time.sleep(0.2)
+#message = input("Press enter to quit\n\n") # Run until someone presses enter
 
 GPIO.cleanup() # Clean up
