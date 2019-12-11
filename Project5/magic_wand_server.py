@@ -32,10 +32,9 @@ class magic_wand_server(QtWidgets.QDialog):
 		self.totalImages = 1
 		
 		self.ui.getImageButton.clicked.connect(self.getImage)
-		self.ui.getPercentVoiceButton.clicked.connect(self.getPercentVoice)
-		self.ui.getPercentImagesButton.clicked.connect(self.getPercentImages)
+		self.ui.getPercentButton.clicked.connect(self.getPercentData)
 		
-	def getPercentVoice(self):
+	def getPercentData(self):
 		valid_voice_commands = ['Identifio', 'Wrongo', 'Correcto']
 		invalid_voice_commands = 'Invalid'
 		
@@ -92,23 +91,18 @@ class magic_wand_server(QtWidgets.QDialog):
 			
 		self.percentVoiceCorrect = (float(voice_command_correct / self.total_messages) * 100)
 		self.percentVoiceWrong = 100 - self.percentVoiceCorrect
-		self.ui.percentCorrectVoiceDisplay.setText(str(self.percentVoiceCorrect) + "%")
-		self.ui.percentWrongVoiceDisplay.setText(str(self.percentVoiceWrong) + "%")
-		
+		self.ui.lcdPercentCorrectVoice.display(self.percentVoiceCorrect)
+		self.ui.lcdPercentWrongVoice.display(self.percentVoiceWrong)
 		
 		self.percentImagesCorrect = (float(image_command_correct / self.totalImages) * 100)
 		self.percentImagesWrong = 100 - self.percentImagesCorrect
-		self.ui.percentCorrectImagesDisplay.setText(str(self.percentImagesCorrect) + "%")
-		self.ui.percentWrongImagesDisplay.setText(str(self.percentImagesWrong) + "%")
 		
-		
+		self.ui.lcdPercentCorrectImages.display(self.percentImagesCorrect)
+		self.ui.lcdPercentWrongImages.display(self.percentImagesWrong)
+				
 		self.ui.imageLabel.setText(str(self.latestLabel))
 		
 		doneFlag = 0
-		
-
-	def getPercentImages(self):
-		pass
 		
 	def getImage(self):
 		s3 = boto3.resource('s3', region_name='us-east-1')
